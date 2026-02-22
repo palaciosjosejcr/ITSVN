@@ -21,28 +21,46 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// 🔐 ROL GLOBAL
-window.rol = "usuario";
+window.rol = "bloqueado"; // Estado inicial
 
-// LOGIN
+// 🔐 LOGIN
 window.login = function(){
   const pass = document.getElementById("password").value;
+  const mensaje = document.getElementById("mensajeLogin");
 
   if(pass === "admin123"){
     window.rol = "admin";
-    alert("Modo Administrador Activado");
-  } else {
-    window.rol = "usuario";
-    alert("Modo Usuario Activado");
+    mensaje.innerText = "Modo Administrador Activado";
+    mensaje.style.color = "lime";
+    activarBotones();
   }
-
-  document.getElementById("loginBox").style.display = "none";
+  else if(pass === "user123"){
+    window.rol = "usuario";
+    mensaje.innerText = "Modo Usuario Activado";
+    mensaje.style.color = "cyan";
+    activarBotones();
+  }
+  else{
+    mensaje.innerText = "❌ Contraseña incorrecta";
+    mensaje.style.color = "red";
+  }
 }
 
-// ENVÍO GRUPO 1
+// 🔓 Activar botones
+function activarBotones(){
+  const botones = document.querySelectorAll(".controlBtn");
+  botones.forEach(btn => btn.disabled = false);
+}
+
+// 🚀 Enviar datos
 window.enviarGrupo1 = function(valor){
 
-  if(window.rol !== "admin" && valor === 4){
+  if(window.rol === "bloqueado"){
+    alert("Debe iniciar sesión primero");
+    return;
+  }
+
+  if(valor === 4 && window.rol !== "admin"){
     alert("Solo el administrador puede ejecutar la Secuencia 4");
     return;
   }
@@ -50,16 +68,16 @@ window.enviarGrupo1 = function(valor){
   set(ref(db,'grupo1'), valor);
 }
 
-// ENVÍO GRUPO 2
 window.enviarGrupo2 = function(valor){
 
-  if(window.rol !== "admin" && valor === 8){
-    alert("Solo el administrador puede ejecutar la Secuencia 8");
+  if(window.rol === "bloqueado"){
+    alert("Debe iniciar sesión primero");
     return;
   }
 
   set(ref(db,'grupo2'), valor);
 }
+
 </script>
 
 <style>
@@ -103,7 +121,14 @@ button{
   transition:0.3s;
 }
 
-button:hover{
+button:disabled{
+  background:#444;
+  box-shadow:none;
+  cursor:not-allowed;
+  opacity:0.5;
+}
+
+button:hover:not(:disabled){
   background:#00f2ff;
   color:black;
   transform:scale(1.05);
@@ -127,15 +152,16 @@ button:hover{
   margin-bottom:20px;
 }
 
-#loginBox input{
-  padding:8px;
-  border-radius:5px;
+#password{
+  padding:10px;
+  border-radius:8px;
   border:none;
+  width:200px;
 }
 
-#loginBox button{
-  width:auto;
-  padding:8px 15px;
+#mensajeLogin{
+  margin-top:10px;
+  font-weight:bold;
 }
 </style>
 </head>
@@ -146,27 +172,28 @@ button:hover{
 INSTITUTO UNIVERSITARIO VIDA NUEVA
 </header>
 
-<div class="container">
-
-<div class="botones">
-
 <div id="loginBox">
   <h3>Acceso al Sistema</h3>
   <input type="password" id="password" placeholder="Ingrese contraseña">
   <button onclick="login()">Ingresar</button>
+  <p id="mensajeLogin"></p>
 </div>
 
+<div class="container">
+
+<div class="botones">
+
 <h2>Grupo A - D</h2>
-<button onclick="enviarGrupo1(1)">Secuencia 1</button>
-<button onclick="enviarGrupo1(2)">Secuencia 2</button>
-<button onclick="enviarGrupo1(3)">Secuencia 3</button>
-<button onclick="enviarGrupo1(4)">Secuencia 4</button>
+<button class="controlBtn" disabled onclick="enviarGrupo1(1)">Secuencia 1</button>
+<button class="controlBtn" disabled onclick="enviarGrupo1(2)">Secuencia 2</button>
+<button class="controlBtn" disabled onclick="enviarGrupo1(3)">Secuencia 3</button>
+<button class="controlBtn" disabled onclick="enviarGrupo1(4)">Secuencia 4 (Admin)</button>
 
 <h2>Grupo E - H</h2>
-<button onclick="enviarGrupo2(5)">Secuencia 5</button>
-<button onclick="enviarGrupo2(6)">Secuencia 6</button>
-<button onclick="enviarGrupo2(7)">Secuencia 7</button>
-<button onclick="enviarGrupo2(8)">Secuencia 8</button>
+<button class="controlBtn" disabled onclick="enviarGrupo2(5)">Secuencia 5</button>
+<button class="controlBtn" disabled onclick="enviarGrupo2(6)">Secuencia 6</button>
+<button class="controlBtn" disabled onclick="enviarGrupo2(7)">Secuencia 7</button>
+<button class="controlBtn" disabled onclick="enviarGrupo2(8)">Secuencia 8</button>
 
 </div>
 

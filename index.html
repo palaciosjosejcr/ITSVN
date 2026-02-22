@@ -21,11 +21,42 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+// 🔐 SISTEMA DE ROLES
+let rol = "usuario";
+
+window.login = function(){
+  const pass = document.getElementById("password").value;
+
+  if(pass === "admin123"){
+    rol = "admin";
+    alert("Modo Administrador Activado");
+  } else {
+    rol = "usuario";
+    alert("Modo Usuario Activado");
+  }
+
+  document.getElementById("loginBox").style.display = "none";
+}
+
+// ENVÍO GRUPO 1
 window.enviarGrupo1 = function(valor){
+
+  if(rol !== "admin" && valor === 4){
+    alert("Solo el administrador puede ejecutar la Secuencia 4");
+    return;
+  }
+
   set(ref(db,'grupo1'), valor);
 }
 
+// ENVÍO GRUPO 2
 window.enviarGrupo2 = function(valor){
+
+  if(rol !== "admin" && valor === 8){
+    alert("Solo el administrador puede ejecutar la Secuencia 8");
+    return;
+  }
+
   set(ref(db,'grupo2'), valor);
 }
 </script>
@@ -89,6 +120,22 @@ button:hover{
 .qr img{
   width:200px;
 }
+
+#loginBox{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+#loginBox input{
+  padding:8px;
+  border-radius:5px;
+  border:none;
+}
+
+#loginBox button{
+  width:auto;
+  padding:8px 15px;
+}
 </style>
 </head>
 
@@ -101,6 +148,12 @@ INSTITUTO UNIVERSITARIO VIDA NUEVA
 <div class="container">
 
 <div class="botones">
+
+<div id="loginBox">
+  <h3>Acceso al Sistema</h3>
+  <input type="password" id="password" placeholder="Ingrese contraseña">
+  <button onclick="login()">Ingresar</button>
+</div>
 
 <h2>Grupo A - D</h2>
 <button onclick="enviarGrupo1(1)">Secuencia 1</button>
@@ -118,7 +171,7 @@ INSTITUTO UNIVERSITARIO VIDA NUEVA
 
 <div class="qr">
 <h3>Escanea para acceder</h3>
-<img src="qr_github.png" width="200">
+<img src="qr_github.png">
 <p>Comparte esta página</p>
 </div>
 

@@ -4,63 +4,7 @@
 <meta charset="UTF-8">
 <title>INSTITUTO UNIVERSITARIO VIDA NUEVA</title>
 
-<!-- ================= FIREBASE ================= -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "control-f7416.firebaseapp.com",
-  databaseURL: "https://control-f7416-default-rtdb.firebaseio.com",
-  projectId: "control-f7416",
-  storageBucket: "control-f7416.firebasestorage.app",
-  messagingSenderId: "212032265098",
-  appId: "1:212032265098:web:14bf7575bf75c66f9bc673"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-// ===== FUNCIONES NORMALES =====
-window.enviarGrupo1 = function(valor){
-  set(ref(db,'grupo1'), valor);
-}
-
-window.enviarGrupo2 = function(valor){
-  set(ref(db,'grupo2'), valor);
-}
-
-// ===== FUNCIONES ADMIN =====
-window.enviarAdmin = function(valor){
-  set(ref(db,'admin'), valor);
-  simularAdmin();
-}
-
-// ===== SIMULACIÓN VISUAL =====
-window.simularAdmin = function(){
-
-  document.getElementById("simulacion").style.display = "block";
-
-  const lista = ["A","B","C","D","E","F","G","H"];
-
-  lista.forEach((id, index)=>{
-    setTimeout(()=>{
-      document.getElementById(id).classList.add("activo");
-    }, index * 300);
-  });
-
-  setTimeout(()=>{
-    lista.forEach(id=>{
-      document.getElementById(id).classList.remove("activo");
-    });
-  }, 5000);
-}
-</script>
-
-<!-- ================= CSS ================= -->
 <style>
-
 body{
   margin:0;
   font-family:Arial;
@@ -103,8 +47,6 @@ button:hover{
   margin-top:30px;
 }
 
-/* ===== SIMULACIÓN ===== */
-
 .simulacion{
   margin-top:40px;
   display:none;
@@ -134,15 +76,16 @@ button:hover{
 .cilindro.activo::after{
   width:100%;
 }
-
 </style>
 </head>
 
 <body>
 
-<header>
-INSTITUTO UNIVERSITARIO VIDA NUEVA
-</header>
+<header>INSTITUTO UNIVERSITARIO VIDA NUEVA</header>
+
+<h3>Acceso Administrador</h3>
+<input type="password" id="clave" placeholder="Ingrese contraseña">
+<button onclick="login()">Ingresar</button>
 
 <h2>Grupo A - D</h2>
 <button onclick="enviarGrupo1(1)">Secuencia 1</button>
@@ -156,11 +99,13 @@ INSTITUTO UNIVERSITARIO VIDA NUEVA
 <button onclick="enviarGrupo2(7)">Secuencia 7</button>
 <button onclick="enviarGrupo2(8)">Secuencia 8</button>
 
+<div id="adminPanel" style="display:none;">
 <h2>Controles Administrador</h2>
-<button class="admin" onclick="enviarAdmin('I')">Control Admin 1</button>
-<button class="admin" onclick="enviarAdmin('J')">Control Admin 2</button>
-<button class="admin" onclick="enviarAdmin('K')">Control Admin 3</button>
-<button class="admin" onclick="enviarAdmin('L')">Control Admin 4</button>
+<button class="admin" onclick="controlAdmin('I')">Control Admin 1</button>
+<button class="admin" onclick="controlAdmin('J')">Control Admin 2</button>
+<button class="admin" onclick="controlAdmin('K')">Control Admin 3</button>
+<button class="admin" onclick="controlAdmin('L')">Control Admin 4</button>
+</div>
 
 <div class="qr">
 <h3>Escanea para acceder</h3>
@@ -169,18 +114,74 @@ INSTITUTO UNIVERSITARIO VIDA NUEVA
 
 <div class="simulacion" id="simulacion">
 <h2>Simulación de Válvulas</h2>
-
 <div class="cilindro" id="A"></div>
 <div class="cilindro" id="B"></div>
 <div class="cilindro" id="C"></div>
 <div class="cilindro" id="D"></div>
-
 <div class="cilindro" id="E"></div>
 <div class="cilindro" id="F"></div>
 <div class="cilindro" id="G"></div>
 <div class="cilindro" id="H"></div>
-
 </div>
+
+<!-- ================= FIREBASE ================= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "control-f7416.firebaseapp.com",
+  databaseURL: "https://control-f7416-default-rtdb.firebaseio.com",
+  projectId: "control-f7416",
+  storageBucket: "control-f7416.firebasestorage.app",
+  messagingSenderId: "212032265098",
+  appId: "1:212032265098:web:14bf7575bf75c66f9bc673"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+window.enviarGrupo1 = (v)=> set(ref(db,'grupo1'),v);
+window.enviarGrupo2 = (v)=> set(ref(db,'grupo2'),v);
+
+window.controlAdmin = (v)=>{
+  set(ref(db,'admin'),v);
+  setTimeout(()=>{
+    set(ref(db,'admin'),"");
+  },800);
+  simular();
+};
+</script>
+
+<!-- ================= JS NORMAL ================= -->
+<script>
+function login(){
+  const clave = document.getElementById("clave").value;
+  if(clave==="1234"){
+    document.getElementById("adminPanel").style.display="block";
+    document.getElementById("clave").value="";
+  }else{
+    alert("Contraseña incorrecta");
+    document.getElementById("clave").value="";
+  }
+}
+
+function simular(){
+  document.getElementById("simulacion").style.display="block";
+  const lista=["A","B","C","D","E","F","G","H"];
+  lista.forEach((id,i)=>{
+    setTimeout(()=>{
+      document.getElementById(id).classList.add("activo");
+    },i*300);
+  });
+  setTimeout(()=>{
+    lista.forEach(id=>{
+      document.getElementById(id).classList.remove("activo");
+    });
+  },4000);
+}
+</script>
 
 </body>
 </html>

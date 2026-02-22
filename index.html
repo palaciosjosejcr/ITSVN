@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>INSTITUTO UNIVERSITARIO VIDA NUEVA</title>
 
+<!-- ================= FIREBASE ================= -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -21,259 +22,164 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const ADMIN_PASSWORD = "admin123";
-
-let esAdmin = false;
-let tiempoRestante = 60;
-let temporizador = null;
-let bloqueado = localStorage.getItem("bloqueado") === "true";
-
-// ================= TIMER =================
-
-function actualizarTimer(){
-  document.getElementById("timer").innerText = tiempoRestante;
+// ===== FUNCIONES NORMALES =====
+window.enviarGrupo1 = function(valor){
+  set(ref(db,'grupo1'), valor);
 }
 
-function iniciarTemporizador(){
-  temporizador = setInterval(()=>{
-    tiempoRestante--;
-    actualizarTimer();
-
-    if(tiempoRestante <= 0){
-      clearInterval(temporizador);
-      bloquearSistema();
-    }
-  },1000);
+window.enviarGrupo2 = function(valor){
+  set(ref(db,'grupo2'), valor);
 }
 
-// ================= BLOQUEO =================
-
-function bloquearSistema(){
-  bloqueado = true;
-  localStorage.setItem("bloqueado","true");
-  document.getElementById("bloqueo").style.display="flex";
-  desactivarBotones();
+// ===== FUNCIONES ADMIN =====
+window.enviarAdmin = function(valor){
+  set(ref(db,'admin'), valor);
+  simularAdmin();
 }
 
-function desbloquearSistema(){
-  bloqueado = false;
-  localStorage.setItem("bloqueado","false");
-  tiempoRestante = 60;
-  actualizarTimer();
-  temporizador = null;
-  document.getElementById("bloqueo").style.display="none";
-  activarBotones();
-}
+// ===== SIMULACIÓN VISUAL =====
+window.simularAdmin = function(){
 
-function activarBotones(){
-  document.querySelectorAll(".botonUser").forEach(b=>b.disabled=false);
-}
+  document.getElementById("simulacion").style.display = "block";
 
-function desactivarBotones(){
-  document.querySelectorAll(".botonUser").forEach(b=>b.disabled=true);
-}
+  const lista = ["A","B","C","D","E","F","G","H"];
 
-// ================= LOGIN =================
+  lista.forEach((id, index)=>{
+    setTimeout(()=>{
+      document.getElementById(id).classList.add("activo");
+    }, index * 300);
+  });
 
-window.login = function(){
-  const pass = document.getElementById("password").value;
-
-  if(pass === ADMIN_PASSWORD){
-      esAdmin = true;
-      document.getElementById("adminPanel").style.display="block";
-      document.getElementById("loginBox").style.display="none";
-      activarBotones();
-      document.getElementById("password").value="";
-      return;
-  }
-
-  alert("Contraseña incorrecta");
-  document.getElementById("password").value="";
-}
-
-// ================= DESBLOQUEO ADMIN =================
-
-window.desbloqueoAdmin = function(){
-  const pass = document.getElementById("adminUnlock").value;
-
-  if(pass === ADMIN_PASSWORD){
-      desbloquearSistema();
-      document.getElementById("adminUnlock").value="";
-      return;
-  }
-
-  alert("Contraseña incorrecta");
-  document.getElementById("adminUnlock").value="";
-}
-
-// ================= ENVÍO =================
-
-function enviar(ruta, valor){
-
-  if(bloqueado) return;
-
-  if(!esAdmin && temporizador === null){
-      iniciarTemporizador();
-  }
-
-  set(ref(db,ruta),valor);
-}
-
-window.enviarGrupo1 = v => enviar("grupo1",v);
-window.enviarGrupo2 = v => enviar("grupo2",v);
-
-// ================= ADMIN CONTROLES =================
-
-window.controlAdmin = function(num){
-
-  if(!esAdmin) return;
-
-  if(num==1){ enviar("grupo1",1); enviar("grupo2",5); }
-  if(num==2){ enviar("grupo1",2); enviar("grupo2",6); }
-  if(num==3){ enviar("grupo1",3); enviar("grupo2",7); }
-  if(num==4){ enviar("grupo1",4); enviar("grupo2",8); }
-}
-
-window.onload = function(){
-  actualizarTimer();
-  if(bloqueado){
-    document.getElementById("bloqueo").style.display="flex";
-    desactivarBotones();
-  }
+  setTimeout(()=>{
+    lista.forEach(id=>{
+      document.getElementById(id).classList.remove("activo");
+    });
+  }, 5000);
 }
 </script>
 
+<!-- ================= CSS ================= -->
 <style>
+
 body{
   margin:0;
   font-family:Arial;
   background:linear-gradient(135deg,#1a0033,#3a0072,#0f0c29);
   color:white;
+  text-align:center;
 }
 
 header{
-  text-align:center;
   padding:20px;
   font-size:28px;
   font-weight:bold;
-  text-shadow:0 0 15px cyan;
-}
-
-.container{
-  display:flex;
-  justify-content:space-between;
-  padding:30px;
-}
-
-.left{ width:55%; }
-
-.right{
-  width:35%;
-  background:rgba(255,255,255,0.1);
-  padding:20px;
-  border-radius:15px;
-  text-align:center;
-  box-shadow:0 0 20px magenta;
+  text-shadow:0 0 15px #00f2ff;
 }
 
 button{
-  padding:12px;
-  margin:8px;
+  padding:12px 25px;
+  margin:10px;
+  font-size:16px;
   border:none;
-  border-radius:10px;
+  border-radius:8px;
+  cursor:pointer;
   background:#1f1c2c;
   color:white;
-  box-shadow:0 0 10px cyan;
-  cursor:pointer;
+  box-shadow:0 0 15px #00f2ff;
+  transition:0.3s;
 }
 
 button:hover{
-  background:cyan;
+  background:#00f2ff;
   color:black;
 }
 
-#adminPanel{
-  display:none;
-  margin-top:20px;
-  background:rgba(255,255,255,0.1);
-  padding:15px;
-  border-radius:10px;
+.admin{
+  background:#ff00ff;
+  box-shadow:0 0 20px #ff00ff;
 }
 
-#bloqueo{
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:linear-gradient(135deg,#000000,#1a0033,#000000);
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-  font-size:24px;
-  z-index:9999;
+.qr{
+  margin-top:30px;
 }
+
+/* ===== SIMULACIÓN ===== */
+
+.simulacion{
+  margin-top:40px;
+  display:none;
+}
+
+.cilindro{
+  width:200px;
+  height:20px;
+  background:#222;
+  margin:10px auto;
+  border-radius:10px;
+  position:relative;
+  overflow:hidden;
+}
+
+.cilindro::after{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  height:100%;
+  width:0%;
+  background:#00f2ff;
+  transition:1s;
+}
+
+.cilindro.activo::after{
+  width:100%;
+}
+
 </style>
 </head>
 
 <body>
 
-<header>INSTITUTO UNIVERSITARIO VIDA NUEVA</header>
+<header>
+INSTITUTO UNIVERSITARIO VIDA NUEVA
+</header>
 
-<div style="text-align:center" id="loginBox">
-<h3>Acceso Administrador</h3>
-<input type="password" id="password" placeholder="Ingrese contraseña">
-<button onclick="login()">Ingresar</button>
-</div>
+<h2>Grupo A - D</h2>
+<button onclick="enviarGrupo1(1)">Secuencia 1</button>
+<button onclick="enviarGrupo1(2)">Secuencia 2</button>
+<button onclick="enviarGrupo1(3)">Secuencia 3</button>
+<button onclick="enviarGrupo1(4)">Secuencia 4</button>
 
-<h3 style="text-align:center">Tiempo restante: <span id="timer">60</span> segundos</h3>
+<h2>Grupo E - H</h2>
+<button onclick="enviarGrupo2(5)">Secuencia 5</button>
+<button onclick="enviarGrupo2(6)">Secuencia 6</button>
+<button onclick="enviarGrupo2(7)">Secuencia 7</button>
+<button onclick="enviarGrupo2(8)">Secuencia 8</button>
 
-<div class="container">
+<h2>Controles Administrador</h2>
+<button class="admin" onclick="enviarAdmin('I')">Control Admin 1</button>
+<button class="admin" onclick="enviarAdmin('J')">Control Admin 2</button>
+<button class="admin" onclick="enviarAdmin('K')">Control Admin 3</button>
+<button class="admin" onclick="enviarAdmin('L')">Control Admin 4</button>
 
-<div class="left">
-
-<h2>Grupo A-D</h2>
-<button class="botonUser" onclick="enviarGrupo1(1)">Secuencia 1</button>
-<button class="botonUser" onclick="enviarGrupo1(2)">Secuencia 2</button>
-<button class="botonUser" onclick="enviarGrupo1(3)">Secuencia 3</button>
-<button class="botonUser" onclick="enviarGrupo1(4)">Secuencia 4</button>
-
-<h2>Grupo E-H</h2>
-<button class="botonUser" onclick="enviarGrupo2(5)">Secuencia 5</button>
-<button class="botonUser" onclick="enviarGrupo2(6)">Secuencia 6</button>
-<button class="botonUser" onclick="enviarGrupo2(7)">Secuencia 7</button>
-<button class="botonUser" onclick="enviarGrupo2(8)">Secuencia 8</button>
-
-<div id="adminPanel">
-<h2>Panel Admin</h2>
-<button onclick="controlAdmin(1)">Control Admin 1</button>
-<button onclick="controlAdmin(2)">Control Admin 2</button>
-<button onclick="controlAdmin(3)">Control Admin 3</button>
-<button onclick="controlAdmin(4)">Control Admin 4</button>
-</div>
-
-</div>
-
-<div class="right">
+<div class="qr">
 <h3>Escanea para acceder</h3>
 <img src="qr_github.png" width="200">
-<p>Comparte esta página</p>
 </div>
 
-</div>
+<div class="simulacion" id="simulacion">
+<h2>Simulación de Válvulas</h2>
 
-<div id="bloqueo">
-  <h2>⛔ Tiempo terminado</h2>
-  <p>Solo un administrador puede desbloquear</p>
+<div class="cilindro" id="A"></div>
+<div class="cilindro" id="B"></div>
+<div class="cilindro" id="C"></div>
+<div class="cilindro" id="D"></div>
 
-  <input type="password" id="adminUnlock" placeholder="Contraseña administrador">
-  <br><br>
-  <button onclick="desbloqueoAdmin()">Desbloquear</button>
+<div class="cilindro" id="E"></div>
+<div class="cilindro" id="F"></div>
+<div class="cilindro" id="G"></div>
+<div class="cilindro" id="H"></div>
 
-  <br><br>
-  <h3>Escanea para acceder</h3>
-  <img src="qr_github.png" width="180">
 </div>
 
 </body>

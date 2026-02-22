@@ -21,17 +21,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// 🔐 SISTEMA DE ROLES
-let rol = "usuario";
+// 🔐 ROL GLOBAL
+window.rol = "usuario";
 
+// LOGIN
 window.login = function(){
   const pass = document.getElementById("password").value;
 
   if(pass === "admin123"){
-    rol = "admin";
+    window.rol = "admin";
     alert("Modo Administrador Activado");
   } else {
-    rol = "usuario";
+    window.rol = "usuario";
     alert("Modo Usuario Activado");
   }
 
@@ -41,7 +42,7 @@ window.login = function(){
 // ENVÍO GRUPO 1
 window.enviarGrupo1 = function(valor){
 
-  if(rol !== "admin" && valor === 4){
+  if(window.rol !== "admin" && valor === 4){
     alert("Solo el administrador puede ejecutar la Secuencia 4");
     return;
   }
@@ -52,7 +53,7 @@ window.enviarGrupo1 = function(valor){
 // ENVÍO GRUPO 2
 window.enviarGrupo2 = function(valor){
 
-  if(rol !== "admin" && valor === 8){
+  if(window.rol !== "admin" && valor === 8){
     alert("Solo el administrador puede ejecutar la Secuencia 8");
     return;
   }

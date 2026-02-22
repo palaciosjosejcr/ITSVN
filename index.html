@@ -21,28 +21,33 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-window.rol = "bloqueado"; // Estado inicial
+window.rol = "bloqueado";
+let temporizador = null;
 
 // 🔐 LOGIN
 window.login = function(){
-  const pass = document.getElementById("password").value;
+  const passInput = document.getElementById("password");
+  const pass = passInput.value;
   const mensaje = document.getElementById("mensajeLogin");
 
   if(pass === "admin123"){
     window.rol = "admin";
-    mensaje.innerText = "Modo Administrador Activado";
+    mensaje.innerText = "👑 Modo Administrador Activado (Sin límite)";
     mensaje.style.color = "lime";
     activarBotones();
   }
   else if(pass === "user123"){
     window.rol = "usuario";
-    mensaje.innerText = "Modo Usuario Activado";
+    mensaje.innerText = "👤 Modo Usuario Activado (1 minuto)";
     mensaje.style.color = "cyan";
     activarBotones();
+    iniciarTemporizador();
   }
   else{
     mensaje.innerText = "❌ Contraseña incorrecta";
     mensaje.style.color = "red";
+    passInput.value = ""; // 🔥 VACÍA EL CAMPO
+    passInput.focus();
   }
 }
 
@@ -52,7 +57,24 @@ function activarBotones(){
   botones.forEach(btn => btn.disabled = false);
 }
 
-// 🚀 Enviar datos
+// 🔒 Bloquear sistema
+function bloquearSistema(){
+  const botones = document.querySelectorAll(".controlBtn");
+  botones.forEach(btn => btn.disabled = true);
+  window.rol = "bloqueado";
+  alert("⏳ Tiempo de usuario agotado. Vuelva a iniciar sesión.");
+}
+
+// ⏳ Temporizador usuario (1 minuto)
+function iniciarTemporizador(){
+  if(temporizador) clearTimeout(temporizador);
+
+  temporizador = setTimeout(()=>{
+    bloquearSistema();
+  }, 60000); // 60000 ms = 1 minuto
+}
+
+// 🚀 Envío Grupo 1
 window.enviarGrupo1 = function(valor){
 
   if(window.rol === "bloqueado"){
@@ -68,6 +90,7 @@ window.enviarGrupo1 = function(valor){
   set(ref(db,'grupo1'), valor);
 }
 
+// 🚀 Envío Grupo 2
 window.enviarGrupo2 = function(valor){
 
   if(window.rol === "bloqueado"){

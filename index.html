@@ -9,7 +9,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCNVbu2JsqcMIdfg7BJaItg8yssOJzxdOY",
+  apiKey: "TU_API_KEY",
   authDomain: "control-f7416.firebaseapp.com",
   databaseURL: "https://control-f7416-default-rtdb.firebaseio.com",
   projectId: "control-f7416",
@@ -21,91 +21,126 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-window.rol = "bloqueado";
-let temporizador = null;
+// 🔐 CONFIG
+const ADMIN_PASSWORD = "admin123";
+const UNLOCK_PASSWORD = "desbloquear";
 
-// 🔐 LOGIN
+let esAdmin = false;
+let tiempoRestante = 60;
+let temporizador;
+let bloqueado = localStorage.getItem("bloqueado") === "true";
+
+// ================= BLOQUEO =================
+
+function bloquearSistema(){
+  bloqueado = true;
+  localStorage.setItem("bloqueado","true");
+  document.getElementById("bloqueo").style.display="flex";
+  desactivarBotones();
+}
+
+function desbloquearSistema(){
+  bloqueado = false;
+  localStorage.setItem("bloqueado","false");
+  document.getElementById("bloqueo").style.display="none";
+  activarBotones();
+}
+
+function activarBotones(){
+  document.querySelectorAll(".botonUser").forEach(b=>b.disabled=false);
+}
+
+function desactivarBotones(){
+  document.querySelectorAll(".botonUser").forEach(b=>b.disabled=true);
+}
+
+// ================= LOGIN =================
+
 window.login = function(){
 
-  const input = document.getElementById("password");
-  const pass = input.value;
-  const mensaje = document.getElementById("mensajeLogin");
+  const pass = document.getElementById("password").value;
 
-  if(pass === "admin123"){
-    window.rol = "admin";
-    mensaje.innerText = "👑 Administrador activo (sin límite)";
-    mensaje.style.color = "lime";
-    activarBotones();
+  if(pass === ADMIN_PASSWORD){
+      esAdmin = true;
+      document.getElementById("adminPanel").style.display="block";
+      document.getElementById("loginBox").style.display="none";
+      activarBotones();
+      document.getElementById("password").value="";
+      return;
   }
-  else if(pass === "user123"){
-    window.rol = "usuario";
-    mensaje.innerText = "👤 Usuario activo (1 minuto)";
-    mensaje.style.color = "cyan";
-    activarBotones();
-    iniciarTemporizador();
-  }
-  else{
-    mensaje.innerText = "❌ Contraseña incorrecta";
-    mensaje.style.color = "red";
-    input.value = "";
-    input.focus();
-  }
-};
 
-// 🔓 ACTIVAR BOTONES
-function activarBotones(){
-  const botones = document.querySelectorAll(".controlBtn");
-  botones.forEach(btn => btn.disabled = false);
+  if(pass === UNLOCK_PASSWORD){
+      desbloquearSistema();
+      document.getElementById("password").value="";
+      return;
+  }
+
+  alert("Contraseña incorrecta");
+  document.getElementById("password").value="";
 }
 
-// 🔒 BLOQUEAR SISTEMA
-function bloquearSistema(){
-  const botones = document.querySelectorAll(".controlBtn");
-  botones.forEach(btn => btn.disabled = true);
-  window.rol = "bloqueado";
-  alert("⏳ Tiempo agotado. Inicie sesión nuevamente.");
-}
+// ================= TEMPORIZADOR =================
 
-// ⏳ TEMPORIZADOR 1 MIN
 function iniciarTemporizador(){
-  if(temporizador) clearTimeout(temporizador);
+  temporizador = setInterval(()=>{
+    tiempoRestante--;
+    document.getElementById("timer").innerText = tiempoRestante;
 
-  temporizador = setTimeout(()=>{
-    bloquearSistema();
-  }, 60000);
+    if(tiempoRestante<=0){
+      clearInterval(temporizador);
+      bloquearSistema();
+    }
+  },1000);
 }
 
-// 🚀 ENVÍO GRUPO 1
-window.enviarGrupo1 = function(valor){
+// ================= ENVÍO =================
 
-  if(window.rol === "bloqueado"){
-    alert("Debe iniciar sesión primero");
-    return;
+function enviar(ruta, valor){
+
+  if(bloqueado) return;
+
+  if(!esAdmin && !temporizador){
+      iniciarTemporizador();
   }
 
-  if(valor === 4 && window.rol !== "admin"){
-    alert("Solo el administrador puede ejecutar la Secuencia 4");
-    return;
+  set(ref(db,ruta),valor);
+}
+
+window.enviarGrupo1 = v => enviar("grupo1",v);
+window.enviarGrupo2 = v => enviar("grupo2",v);
+
+// ================= ADMIN CONTROLES =================
+
+window.controlAdmin = function(num){
+
+  if(!esAdmin) return;
+
+  if(num==1){
+    enviar("grupo1",1);
+    enviar("grupo2",5);
   }
-
-  set(ref(db, "/grupo1"), valor)
-    .then(() => console.log("Grupo1 enviado:", valor))
-    .catch((error) => console.error("Error:", error));
-};
-
-// 🚀 ENVÍO GRUPO 2
-window.enviarGrupo2 = function(valor){
-
-  if(window.rol === "bloqueado"){
-    alert("Debe iniciar sesión primero");
-    return;
+  if(num==2){
+    enviar("grupo1",2);
+    enviar("grupo2",6);
   }
+  if(num==3){
+    enviar("grupo1",3);
+    enviar("grupo2",7);
+  }
+  if(num==4){
+    enviar("grupo1",4);
+    enviar("grupo2",8);
+  }
+}
 
-  set(ref(db, "/grupo2"), valor)
-    .then(() => console.log("Grupo2 enviado:", valor))
-    .catch((error) => console.error("Error:", error));
-};
+// ================= INICIO =================
 
+window.onload = function(){
+  if(bloqueado){
+    document.getElementById("bloqueo").style.display="flex";
+    desactivarBotones();
+  }
+}
 </script>
 
 <style>
@@ -114,123 +149,83 @@ body{
   font-family:Arial;
   background:linear-gradient(135deg,#1a0033,#3a0072,#0f0c29);
   color:white;
-}
-
-header{
   text-align:center;
-  padding:20px;
-  font-size:28px;
-  font-weight:bold;
-  letter-spacing:2px;
-  text-shadow:0 0 15px #00f2ff;
-}
-
-.container{
-  display:flex;
-  justify-content:space-between;
-  padding:40px;
-}
-
-.botones{
-  width:50%;
 }
 
 button{
-  width:90%;
-  padding:15px;
-  margin:10px;
-  font-size:18px;
+  padding:12px;
+  margin:8px;
+  font-size:16px;
   border:none;
   border-radius:10px;
-  cursor:pointer;
   background:#1f1c2c;
   color:white;
-  box-shadow:0 0 15px #00f2ff;
-  transition:0.3s;
+  box-shadow:0 0 10px cyan;
+  cursor:pointer;
 }
 
-button:disabled{
-  background:#444;
-  box-shadow:none;
-  cursor:not-allowed;
-  opacity:0.5;
-}
-
-button:hover:not(:disabled){
-  background:#00f2ff;
+button:hover{
+  background:cyan;
   color:black;
-  transform:scale(1.05);
 }
 
-.qr{
-  width:40%;
-  text-align:center;
-  background:rgba(255,255,255,0.1);
-  padding:20px;
-  border-radius:15px;
-  box-shadow:0 0 20px #ff00ff;
+#adminPanel{
+  display:none;
+  margin-top:20px;
 }
 
-.qr img{
-  width:200px;
-}
-
-#loginBox{
-  text-align:center;
-  margin-bottom:20px;
-}
-
-#password{
-  padding:10px;
-  border-radius:8px;
-  border:none;
-  width:200px;
-}
-
-#mensajeLogin{
-  margin-top:10px;
-  font-weight:bold;
+#bloqueo{
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.9);
+  color:white;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  font-size:25px;
 }
 </style>
 </head>
 
 <body>
 
-<header>
-INSTITUTO UNIVERSITARIO VIDA NUEVA
-</header>
+<h1>INSTITUTO UNIVERSITARIO VIDA NUEVA</h1>
 
 <div id="loginBox">
-  <h3>Acceso al Sistema</h3>
-  <input type="password" id="password" placeholder="Ingrese contraseña">
-  <button onclick="login()">Ingresar</button>
-  <p id="mensajeLogin"></p>
+<h3>Acceso</h3>
+<input type="password" id="password" placeholder="Ingrese contraseña">
+<button onclick="login()">Ingresar</button>
 </div>
 
-<div class="container">
+<h3>Tiempo restante: <span id="timer">60</span> segundos</h3>
 
-<div class="botones">
+<h2>Grupo A-D</h2>
+<button class="botonUser" onclick="enviarGrupo1(1)">Secuencia 1</button>
+<button class="botonUser" onclick="enviarGrupo1(2)">Secuencia 2</button>
+<button class="botonUser" onclick="enviarGrupo1(3)">Secuencia 3</button>
+<button class="botonUser" onclick="enviarGrupo1(4)">Secuencia 4</button>
 
-<h2>Grupo A - D</h2>
-<button class="controlBtn" disabled onclick="enviarGrupo1(1)">Secuencia 1</button>
-<button class="controlBtn" disabled onclick="enviarGrupo1(2)">Secuencia 2</button>
-<button class="controlBtn" disabled onclick="enviarGrupo1(3)">Secuencia 3</button>
-<button class="controlBtn" disabled onclick="enviarGrupo1(4)">Secuencia 4 (Admin)</button>
+<h2>Grupo E-H</h2>
+<button class="botonUser" onclick="enviarGrupo2(5)">Secuencia 5</button>
+<button class="botonUser" onclick="enviarGrupo2(6)">Secuencia 6</button>
+<button class="botonUser" onclick="enviarGrupo2(7)">Secuencia 7</button>
+<button class="botonUser" onclick="enviarGrupo2(8)">Secuencia 8</button>
 
-<h2>Grupo E - H</h2>
-<button class="controlBtn" disabled onclick="enviarGrupo2(5)">Secuencia 5</button>
-<button class="controlBtn" disabled onclick="enviarGrupo2(6)">Secuencia 6</button>
-<button class="controlBtn" disabled onclick="enviarGrupo2(7)">Secuencia 7</button>
-<button class="controlBtn" disabled onclick="enviarGrupo2(8)">Secuencia 8</button>
-
+<div id="adminPanel">
+<h2>Panel de Control Admin</h2>
+<button onclick="controlAdmin(1)">Control Admin 1</button>
+<button onclick="controlAdmin(2)">Control Admin 2</button>
+<button onclick="controlAdmin(3)">Control Admin 3</button>
+<button onclick="controlAdmin(4)">Control Admin 4</button>
 </div>
 
-<div class="qr">
-<h3>Escanea para acceder</h3>
-<img src="qr_github.png">
-<p>Comparte esta página</p>
-</div>
-
+<div id="bloqueo">
+⛔ Tiempo terminado<br>
+Solo un administrador puede desbloquear
 </div>
 
 </body>

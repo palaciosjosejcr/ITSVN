@@ -26,19 +26,20 @@ let temporizador = null;
 
 // 🔐 LOGIN
 window.login = function(){
-  const passInput = document.getElementById("password");
-  const pass = passInput.value;
+
+  const input = document.getElementById("password");
+  const pass = input.value;
   const mensaje = document.getElementById("mensajeLogin");
 
   if(pass === "admin123"){
     window.rol = "admin";
-    mensaje.innerText = "👑 Modo Administrador Activado (Sin límite)";
+    mensaje.innerText = "👑 Administrador activo (sin límite)";
     mensaje.style.color = "lime";
     activarBotones();
   }
   else if(pass === "user123"){
     window.rol = "usuario";
-    mensaje.innerText = "👤 Modo Usuario Activado (1 minuto)";
+    mensaje.innerText = "👤 Usuario activo (1 minuto)";
     mensaje.style.color = "cyan";
     activarBotones();
     iniciarTemporizador();
@@ -46,35 +47,35 @@ window.login = function(){
   else{
     mensaje.innerText = "❌ Contraseña incorrecta";
     mensaje.style.color = "red";
-    passInput.value = ""; // 🔥 VACÍA EL CAMPO
-    passInput.focus();
+    input.value = "";
+    input.focus();
   }
-}
+};
 
-// 🔓 Activar botones
+// 🔓 ACTIVAR BOTONES
 function activarBotones(){
   const botones = document.querySelectorAll(".controlBtn");
   botones.forEach(btn => btn.disabled = false);
 }
 
-// 🔒 Bloquear sistema
+// 🔒 BLOQUEAR SISTEMA
 function bloquearSistema(){
   const botones = document.querySelectorAll(".controlBtn");
   botones.forEach(btn => btn.disabled = true);
   window.rol = "bloqueado";
-  alert("⏳ Tiempo de usuario agotado. Vuelva a iniciar sesión.");
+  alert("⏳ Tiempo agotado. Inicie sesión nuevamente.");
 }
 
-// ⏳ Temporizador usuario (1 minuto)
+// ⏳ TEMPORIZADOR 1 MIN
 function iniciarTemporizador(){
   if(temporizador) clearTimeout(temporizador);
 
   temporizador = setTimeout(()=>{
     bloquearSistema();
-  }, 60000); // 60000 ms = 1 minuto
+  }, 60000);
 }
 
-// 🚀 Envío Grupo 1
+// 🚀 ENVÍO GRUPO 1
 window.enviarGrupo1 = function(valor){
 
   if(window.rol === "bloqueado"){
@@ -87,10 +88,12 @@ window.enviarGrupo1 = function(valor){
     return;
   }
 
-  set(ref(db,'grupo1'), valor);
-}
+  set(ref(db, "/grupo1"), valor)
+    .then(() => console.log("Grupo1 enviado:", valor))
+    .catch((error) => console.error("Error:", error));
+};
 
-// 🚀 Envío Grupo 2
+// 🚀 ENVÍO GRUPO 2
 window.enviarGrupo2 = function(valor){
 
   if(window.rol === "bloqueado"){
@@ -98,8 +101,10 @@ window.enviarGrupo2 = function(valor){
     return;
   }
 
-  set(ref(db,'grupo2'), valor);
-}
+  set(ref(db, "/grupo2"), valor)
+    .then(() => console.log("Grupo2 enviado:", valor))
+    .catch((error) => console.error("Error:", error));
+};
 
 </script>
 

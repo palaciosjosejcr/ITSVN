@@ -27,10 +27,26 @@ const UNLOCK_PASSWORD = "desbloquear";
 
 let esAdmin = false;
 let tiempoRestante = 60;
-let temporizador;
+let temporizador = null;
 let bloqueado = localStorage.getItem("bloqueado") === "true";
 
-// ================= BLOQUEO =================
+// ================= FUNCIONES =================
+
+function actualizarTimer(){
+  document.getElementById("timer").innerText = tiempoRestante;
+}
+
+function iniciarTemporizador(){
+  temporizador = setInterval(()=>{
+    tiempoRestante--;
+    actualizarTimer();
+
+    if(tiempoRestante<=0){
+      clearInterval(temporizador);
+      bloquearSistema();
+    }
+  },1000);
+}
 
 function bloquearSistema(){
   bloqueado = true;
@@ -42,6 +58,8 @@ function bloquearSistema(){
 function desbloquearSistema(){
   bloqueado = false;
   localStorage.setItem("bloqueado","false");
+  tiempoRestante = 60;
+  actualizarTimer();
   document.getElementById("bloqueo").style.display="none";
   activarBotones();
 }
@@ -57,7 +75,6 @@ function desactivarBotones(){
 // ================= LOGIN =================
 
 window.login = function(){
-
   const pass = document.getElementById("password").value;
 
   if(pass === ADMIN_PASSWORD){
@@ -79,27 +96,13 @@ window.login = function(){
   document.getElementById("password").value="";
 }
 
-// ================= TEMPORIZADOR =================
-
-function iniciarTemporizador(){
-  temporizador = setInterval(()=>{
-    tiempoRestante--;
-    document.getElementById("timer").innerText = tiempoRestante;
-
-    if(tiempoRestante<=0){
-      clearInterval(temporizador);
-      bloquearSistema();
-    }
-  },1000);
-}
-
 // ================= ENVÍO =================
 
 function enviar(ruta, valor){
 
   if(bloqueado) return;
 
-  if(!esAdmin && !temporizador){
+  if(!esAdmin && temporizador === null){
       iniciarTemporizador();
   }
 
@@ -109,33 +112,20 @@ function enviar(ruta, valor){
 window.enviarGrupo1 = v => enviar("grupo1",v);
 window.enviarGrupo2 = v => enviar("grupo2",v);
 
-// ================= ADMIN CONTROLES =================
+// ================= ADMIN =================
 
 window.controlAdmin = function(num){
 
   if(!esAdmin) return;
 
-  if(num==1){
-    enviar("grupo1",1);
-    enviar("grupo2",5);
-  }
-  if(num==2){
-    enviar("grupo1",2);
-    enviar("grupo2",6);
-  }
-  if(num==3){
-    enviar("grupo1",3);
-    enviar("grupo2",7);
-  }
-  if(num==4){
-    enviar("grupo1",4);
-    enviar("grupo2",8);
-  }
+  if(num==1){ enviar("grupo1",1); enviar("grupo2",5); }
+  if(num==2){ enviar("grupo1",2); enviar("grupo2",6); }
+  if(num==3){ enviar("grupo1",3); enviar("grupo2",7); }
+  if(num==4){ enviar("grupo1",4); enviar("grupo2",8); }
 }
 
-// ================= INICIO =================
-
 window.onload = function(){
+  actualizarTimer();
   if(bloqueado){
     document.getElementById("bloqueo").style.display="flex";
     desactivarBotones();
@@ -149,13 +139,38 @@ body{
   font-family:Arial;
   background:linear-gradient(135deg,#1a0033,#3a0072,#0f0c29);
   color:white;
+}
+
+header{
   text-align:center;
+  padding:20px;
+  font-size:28px;
+  font-weight:bold;
+  text-shadow:0 0 15px cyan;
+}
+
+.container{
+  display:flex;
+  justify-content:space-between;
+  padding:30px;
+}
+
+.left{
+  width:55%;
+}
+
+.right{
+  width:35%;
+  background:rgba(255,255,255,0.1);
+  padding:20px;
+  border-radius:15px;
+  text-align:center;
+  box-shadow:0 0 20px magenta;
 }
 
 button{
   padding:12px;
   margin:8px;
-  font-size:16px;
   border:none;
   border-radius:10px;
   background:#1f1c2c;
@@ -172,6 +187,9 @@ button:hover{
 #adminPanel{
   display:none;
   margin-top:20px;
+  background:rgba(255,255,255,0.1);
+  padding:15px;
+  border-radius:10px;
 }
 
 #bloqueo{
@@ -182,26 +200,29 @@ button:hover{
   width:100%;
   height:100%;
   background:rgba(0,0,0,0.9);
-  color:white;
   justify-content:center;
   align-items:center;
   flex-direction:column;
-  font-size:25px;
+  font-size:28px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>INSTITUTO UNIVERSITARIO VIDA NUEVA</h1>
+<header>INSTITUTO UNIVERSITARIO VIDA NUEVA</header>
 
-<div id="loginBox">
+<div style="text-align:center">
 <h3>Acceso</h3>
 <input type="password" id="password" placeholder="Ingrese contraseña">
 <button onclick="login()">Ingresar</button>
 </div>
 
-<h3>Tiempo restante: <span id="timer">60</span> segundos</h3>
+<h3 style="text-align:center">Tiempo restante: <span id="timer">60</span> segundos</h3>
+
+<div class="container">
+
+<div class="left">
 
 <h2>Grupo A-D</h2>
 <button class="botonUser" onclick="enviarGrupo1(1)">Secuencia 1</button>
@@ -216,11 +237,21 @@ button:hover{
 <button class="botonUser" onclick="enviarGrupo2(8)">Secuencia 8</button>
 
 <div id="adminPanel">
-<h2>Panel de Control Admin</h2>
+<h2>Panel Admin</h2>
 <button onclick="controlAdmin(1)">Control Admin 1</button>
 <button onclick="controlAdmin(2)">Control Admin 2</button>
 <button onclick="controlAdmin(3)">Control Admin 3</button>
 <button onclick="controlAdmin(4)">Control Admin 4</button>
+</div>
+
+</div>
+
+<div class="right">
+<h3>Escanea para acceder</h3>
+<img src="qr_github.png" width="200">
+<p>Comparte esta página</p>
+</div>
+
 </div>
 
 <div id="bloqueo">

@@ -21,7 +21,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// 🔐 CONFIGURACIÓN CONTRASEÑAS
+// ================= CONTRASEÑAS =================
 const ADMIN_PASS = "admin123";
 const USER_PASS = "usuario123";
 
@@ -37,6 +37,7 @@ window.login = function(){
   if(pass === ADMIN_PASS){
     desbloquear();
     activarBotones(true);
+    document.getElementById("adminPanel").style.display="block";
     document.getElementById("password").value="";
     document.getElementById("estadoLogin").innerText="Modo Administrador";
     return;
@@ -44,6 +45,7 @@ window.login = function(){
 
   if(pass === USER_PASS && bloqueado !== "true"){
     activarBotones(true);
+    document.getElementById("adminPanel").style.display="none";
     iniciarTemporizador();
     document.getElementById("password").value="";
     document.getElementById("estadoLogin").innerText="Modo Usuario";
@@ -92,7 +94,7 @@ function activarBotones(valor){
   });
 }
 
-// ================= ENVÍO =================
+// ================= ENVÍO FIREBASE =================
 window.enviarGrupo1 = v => set(ref(db,'grupo1'),v);
 window.enviarGrupo2 = v => set(ref(db,'grupo2'),v);
 
@@ -115,7 +117,7 @@ window.admin4 = ()=>{ set(ref(db,'grupo1'),4); set(ref(db,'grupo2'),8); }
   });
 });
 
-// Si estaba bloqueado antes
+// Estado inicial
 if(bloqueado === "true"){
   bloquear();
 }else{
@@ -132,7 +134,10 @@ body{
   text-align:center;
 }
 
-h1{padding:20px;text-shadow:0 0 15px #00f2ff;}
+h1{
+  padding:20px;
+  text-shadow:0 0 15px #00f2ff;
+}
 
 button{
   padding:12px 20px;
@@ -182,7 +187,7 @@ button:disabled{
   left:0;
   width:100%;
   height:100%;
-  background:rgba(0,0,0,0.85);
+  background:rgba(0,0,0,0.9);
   justify-content:center;
   align-items:center;
   flex-direction:column;
@@ -217,11 +222,13 @@ button:disabled{
 <button class="control" onclick="enviarGrupo2(7)">Secuencia 7</button>
 <button class="control" onclick="enviarGrupo2(8)">Secuencia 8</button>
 
+<div id="adminPanel" style="display:none;">
 <h2>Controles Administrador</h2>
 <button class="control admin" onclick="admin1()">Control Admin 1</button>
 <button class="control admin" onclick="admin2()">Control Admin 2</button>
 <button class="control admin" onclick="admin3()">Control Admin 3</button>
 <button class="control admin" onclick="admin4()">Control Admin 4</button>
+</div>
 
 <div class="qr">
 <h3>Escanea para acceder</h3>

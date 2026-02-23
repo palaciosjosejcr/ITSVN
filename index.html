@@ -21,37 +21,92 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// BOTONES
-window.enviarGrupo1 = (v)=> set(ref(db,'grupo1'),v);
-window.enviarGrupo2 = (v)=> set(ref(db,'grupo2'),v);
+// 🔐 CONFIGURACIÓN CONTRASEÑAS
+const ADMIN_PASS = "admin123";
+const USER_PASS = "usuario123";
 
-// ADMIN combinados
-window.admin1 = ()=>{
-  set(ref(db,'grupo1'),1);
-  set(ref(db,'grupo2'),5);
-}
-window.admin2 = ()=>{
-  set(ref(db,'grupo1'),2);
-  set(ref(db,'grupo2'),6);
-}
-window.admin3 = ()=>{
-  set(ref(db,'grupo1'),3);
-  set(ref(db,'grupo2'),7);
-}
-window.admin4 = ()=>{
-  set(ref(db,'grupo1'),4);
-  set(ref(db,'grupo2'),8);
+let tiempo = 60;
+let timer = null;
+let bloqueado = localStorage.getItem("bloqueado");
+
+// ================= LOGIN =================
+window.login = function(){
+
+  let pass = document.getElementById("password").value;
+
+  if(pass === ADMIN_PASS){
+    desbloquear();
+    activarBotones(true);
+    document.getElementById("password").value="";
+    document.getElementById("estadoLogin").innerText="Modo Administrador";
+    return;
+  }
+
+  if(pass === USER_PASS && bloqueado !== "true"){
+    activarBotones(true);
+    iniciarTemporizador();
+    document.getElementById("password").value="";
+    document.getElementById("estadoLogin").innerText="Modo Usuario";
+    return;
+  }
+
+  document.getElementById("password").value="";
+  alert("Contraseña incorrecta o usuario bloqueado");
 }
 
-// ESCUCHAR ESTADOS
-const letras = ["A","B","C","D","E","F","G","H"];
+// ================= TEMPORIZADOR =================
+function iniciarTemporizador(){
+  tiempo = 60;
+  document.getElementById("timer").innerText = tiempo;
 
-letras.forEach(l=>{
+  timer = setInterval(()=>{
+    tiempo--;
+    document.getElementById("timer").innerText = tiempo;
+
+    if(tiempo <= 0){
+      clearInterval(timer);
+      bloquear();
+    }
+  },1000);
+}
+
+// ================= BLOQUEO =================
+function bloquear(){
+  activarBotones(false);
+  localStorage.setItem("bloqueado","true");
+  bloqueado="true";
+  document.getElementById("overlay").style.display="flex";
+}
+
+function desbloquear(){
+  activarBotones(true);
+  localStorage.setItem("bloqueado","false");
+  bloqueado="false";
+  document.getElementById("overlay").style.display="none";
+}
+
+// ================= BOTONES =================
+function activarBotones(valor){
+  document.querySelectorAll("button.control").forEach(b=>{
+    b.disabled = !valor;
+  });
+}
+
+// ================= ENVÍO =================
+window.enviarGrupo1 = v => set(ref(db,'grupo1'),v);
+window.enviarGrupo2 = v => set(ref(db,'grupo2'),v);
+
+window.admin1 = ()=>{ set(ref(db,'grupo1'),1); set(ref(db,'grupo2'),5); }
+window.admin2 = ()=>{ set(ref(db,'grupo1'),2); set(ref(db,'grupo2'),6); }
+window.admin3 = ()=>{ set(ref(db,'grupo1'),3); set(ref(db,'grupo2'),7); }
+window.admin4 = ()=>{ set(ref(db,'grupo1'),4); set(ref(db,'grupo2'),8); }
+
+// ================= SIMULACIÓN =================
+["A","B","C","D","E","F","G","H"].forEach(l=>{
   onValue(ref(db,"estado/"+l),(snap)=>{
     if(snap.exists()){
-      let valor = snap.val();
-      let el = document.getElementById("cil"+l);
-      if(valor=="OUT"){
+      let el=document.getElementById("cil"+l);
+      if(snap.val()=="OUT"){
         el.classList.add("activo");
       }else{
         el.classList.remove("activo");
@@ -59,6 +114,13 @@ letras.forEach(l=>{
     }
   });
 });
+
+// Si estaba bloqueado antes
+if(bloqueado === "true"){
+  bloquear();
+}else{
+  activarBotones(false);
+}
 </script>
 
 <style>
@@ -70,26 +132,21 @@ body{
   text-align:center;
 }
 
-h1{
-  padding:20px;
-  text-shadow:0 0 15px #00f2ff;
-}
+h1{padding:20px;text-shadow:0 0 15px #00f2ff;}
 
 button{
   padding:12px 20px;
-  margin:10px;
+  margin:8px;
   border:none;
   border-radius:10px;
   cursor:pointer;
   background:#1f1c2c;
   color:white;
   box-shadow:0 0 15px #00f2ff;
-  transition:0.3s;
 }
 
-button:hover{
-  background:#00f2ff;
-  color:black;
+button:disabled{
+  opacity:0.3;
 }
 
 .admin{
@@ -97,18 +154,14 @@ button:hover{
   box-shadow:0 0 15px #ff00ff;
 }
 
-.qr img{
-  width:180px;
-}
-
-.simulacion{
+.sim{
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:40px;
+  gap:30px;
   padding:40px;
 }
 
-.cilindro{
+.cil{
   width:120px;
   height:20px;
   background:#ff00ff;
@@ -121,6 +174,24 @@ button:hover{
   transform:translateX(40px);
   background:#00ff99;
 }
+
+#overlay{
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.85);
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  z-index:999;
+}
+
+.qr img{
+  width:160px;
+}
 </style>
 </head>
 
@@ -128,56 +199,52 @@ button:hover{
 
 <h1>INSTITUTO UNIVERSITARIO VIDA NUEVA</h1>
 
+<h3>Acceso</h3>
+<input type="password" id="password" placeholder="Ingrese contraseña">
+<button onclick="login()">Ingresar</button>
+<p id="estadoLogin"></p>
+<p>Tiempo restante: <span id="timer">0</span> segundos</p>
+
 <h2>Grupo A - D</h2>
-<button onclick="enviarGrupo1(1)">Secuencia 1</button>
-<button onclick="enviarGrupo1(2)">Secuencia 2</button>
-<button onclick="enviarGrupo1(3)">Secuencia 3</button>
-<button onclick="enviarGrupo1(4)">Secuencia 4</button>
+<button class="control" onclick="enviarGrupo1(1)">Secuencia 1</button>
+<button class="control" onclick="enviarGrupo1(2)">Secuencia 2</button>
+<button class="control" onclick="enviarGrupo1(3)">Secuencia 3</button>
+<button class="control" onclick="enviarGrupo1(4)">Secuencia 4</button>
 
 <h2>Grupo E - H</h2>
-<button onclick="enviarGrupo2(5)">Secuencia 5</button>
-<button onclick="enviarGrupo2(6)">Secuencia 6</button>
-<button onclick="enviarGrupo2(7)">Secuencia 7</button>
-<button onclick="enviarGrupo2(8)">Secuencia 8</button>
+<button class="control" onclick="enviarGrupo2(5)">Secuencia 5</button>
+<button class="control" onclick="enviarGrupo2(6)">Secuencia 6</button>
+<button class="control" onclick="enviarGrupo2(7)">Secuencia 7</button>
+<button class="control" onclick="enviarGrupo2(8)">Secuencia 8</button>
 
 <h2>Controles Administrador</h2>
-<button class="admin" onclick="admin1()">Control Admin 1</button>
-<button class="admin" onclick="admin2()">Control Admin 2</button>
-<button class="admin" onclick="admin3()">Control Admin 3</button>
-<button class="admin" onclick="admin4()">Control Admin 4</button>
+<button class="control admin" onclick="admin1()">Control Admin 1</button>
+<button class="control admin" onclick="admin2()">Control Admin 2</button>
+<button class="control admin" onclick="admin3()">Control Admin 3</button>
+<button class="control admin" onclick="admin4()">Control Admin 4</button>
 
 <div class="qr">
 <h3>Escanea para acceder</h3>
 <img src="qr_github.png">
 </div>
 
-<h2>Simulación de Válvulas</h2>
+<h2>Simulación</h2>
+<div class="sim">
+<div><div id="cilA" class="cil"></div><p>A</p></div>
+<div><div id="cilB" class="cil"></div><p>B</p></div>
+<div><div id="cilC" class="cil"></div><p>C</p></div>
+<div><div id="cilD" class="cil"></div><p>D</p></div>
+<div><div id="cilE" class="cil"></div><p>E</p></div>
+<div><div id="cilF" class="cil"></div><p>F</p></div>
+<div><div id="cilG" class="cil"></div><p>G</p></div>
+<div><div id="cilH" class="cil"></div><p>H</p></div>
+</div>
 
-<div class="simulacion">
-<div>
-<div id="cilA" class="cilindro"></div><p>A</p>
-</div>
-<div>
-<div id="cilB" class="cilindro"></div><p>B</p>
-</div>
-<div>
-<div id="cilC" class="cilindro"></div><p>C</p>
-</div>
-<div>
-<div id="cilD" class="cilindro"></div><p>D</p>
-</div>
-<div>
-<div id="cilE" class="cilindro"></div><p>E</p>
-</div>
-<div>
-<div id="cilF" class="cilindro"></div><p>F</p>
-</div>
-<div>
-<div id="cilG" class="cilindro"></div><p>G</p>
-</div>
-<div>
-<div id="cilH" class="cilindro"></div><p>H</p>
-</div>
+<div id="overlay">
+<h2>Tiempo terminado</h2>
+<p>Solo administrador puede desbloquear</p>
+<input type="password" id="passwordUnlock" placeholder="Clave admin">
+<button onclick="if(document.getElementById('passwordUnlock').value===ADMIN_PASS){desbloquear();document.getElementById('passwordUnlock').value='';}">Desbloquear</button>
 </div>
 
 </body>

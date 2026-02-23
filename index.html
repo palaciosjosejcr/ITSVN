@@ -6,7 +6,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "TU_API_KEY",
@@ -28,6 +28,7 @@ let tiempoRestante = 60;
 let temporizador = null;
 let bloqueado = localStorage.getItem("bloqueado") === "true";
 
+
 // ================= TIMER =================
 
 function actualizarTimer(){
@@ -45,6 +46,7 @@ function iniciarTemporizador(){
     }
   },1000);
 }
+
 
 // ================= BLOQUEO =================
 
@@ -73,6 +75,7 @@ function desactivarBotones(){
   document.querySelectorAll(".botonUser").forEach(b=>b.disabled=true);
 }
 
+
 // ================= LOGIN =================
 
 window.login = function(){
@@ -91,6 +94,7 @@ window.login = function(){
   document.getElementById("password").value="";
 }
 
+
 // ================= DESBLOQUEO ADMIN =================
 
 window.desbloqueoAdmin = function(){
@@ -106,7 +110,8 @@ window.desbloqueoAdmin = function(){
   document.getElementById("adminUnlock").value="";
 }
 
-// ================= ENVÍO =================
+
+// ================= ENVÍO SECUENCIAS =================
 
 function enviar(ruta, valor){
 
@@ -122,6 +127,7 @@ function enviar(ruta, valor){
 window.enviarGrupo1 = v => enviar("grupo1",v);
 window.enviarGrupo2 = v => enviar("grupo2",v);
 
+
 // ================= ADMIN CONTROLES =================
 
 window.controlAdmin = function(num){
@@ -134,6 +140,35 @@ window.controlAdmin = function(num){
   if(num==4){ enviar("grupo1",4); enviar("grupo2",8); }
 }
 
+
+// ================= SISTEMA DE LIKES =================
+
+const likesRef = ref(db, "likes");
+const dislikesRef = ref(db, "dislikes");
+
+onValue(likesRef, (snapshot) => {
+  document.getElementById("likes").innerText = snapshot.val() || 0;
+});
+
+onValue(dislikesRef, (snapshot) => {
+  document.getElementById("dislikes").innerText = snapshot.val() || 0;
+});
+
+window.darLike = async function(){
+  const snapshot = await get(likesRef);
+  const actual = snapshot.val() || 0;
+  await set(likesRef, actual + 1);
+}
+
+window.darDislike = async function(){
+  const snapshot = await get(dislikesRef);
+  const actual = snapshot.val() || 0;
+  await set(dislikesRef, actual + 1);
+}
+
+
+// ================= CARGA INICIAL =================
+
 window.onload = function(){
   actualizarTimer();
   if(bloqueado){
@@ -142,6 +177,7 @@ window.onload = function(){
   }
 }
 </script>
+
 
 <style>
 body{
@@ -228,6 +264,18 @@ button:hover{
 </div>
 
 <h3 style="text-align:center">Tiempo restante: <span id="timer">60</span> segundos</h3>
+
+
+<!-- SISTEMA DE LIKES -->
+<h3 style="text-align:center;">¿Te gustó el proyecto?</h3>
+<div style="text-align:center;">
+  <button onclick="darLike()">👍 Me gusta</button>
+  <span id="likes">0</span>
+
+  <button onclick="darDislike()">👎 No me gusta</button>
+  <span id="dislikes">0</span>
+</div>
+
 
 <div class="container">
 

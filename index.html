@@ -1,83 +1,232 @@
-#include <WiFi.h>
-#include <Firebase_ESP_Client.h>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>INSTITUTO UNIVERSITARIO VIDA NUEVA</title>
 
-// ================= WIFI =================
-#define WIFI_SSID "CELERITY_FAUSTO"
-#define WIFI_PASSWORD "Fausto1143"
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-// ================= FIREBASE =================
-#define API_KEY "AIzaSyCNVbu2JsqcMIdfg7BJaItg8yssOJzxdOY"
-#define DATABASE_URL "https://control-f7416-default-rtdb.firebaseio.com/"
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "control-f7416.firebaseapp.com",
+  databaseURL: "https://control-f7416-default-rtdb.firebaseio.com",
+  projectId: "control-f7416",
+  storageBucket: "control-f7416.firebasestorage.app",
+  messagingSenderId: "212032265098",
+  appId: "1:212032265098:web:14bf7575bf75c66f9bc673"
+};
 
-FirebaseData fbdo;
-FirebaseAuth auth;
-FirebaseConfig config;
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-// ===== PIN DE PRUEBA (usa uno de tus relés reales) =====
-#define PIN_PRUEBA 16   // cambia si quieres probar otro
+// 🔐 CONFIG
+const ADMIN_PASSWORD = "admin123";
+const UNLOCK_PASSWORD = "desbloquear";
 
-void setup() {
+let esAdmin = false;
+let tiempoRestante = 60;
+let temporizador;
+let bloqueado = localStorage.getItem("bloqueado") === "true";
 
-  Serial.begin(115200);
-  pinMode(PIN_PRUEBA, OUTPUT);
+// ================= BLOQUEO =================
 
-  // Relé apagado (activo en LOW)
-  digitalWrite(PIN_PRUEBA, HIGH);
-
-  Serial.println("Iniciando sistema...");
-
-  // ===== WIFI =====
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("Conectando WiFi");
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("\nWiFi conectado");
-  Serial.print("IP: ");
-  Serial.println(WiFi.localIP());
-
-  // ===== FIREBASE =====
-  config.api_key = API_KEY;
-  config.database_url = DATABASE_URL;
-
-  auth.user.email = "";
-  auth.user.password = "";
-
-  Firebase.begin(&config, &auth);
-  Firebase.reconnectWiFi(true);
-
-  Serial.println("Firebase listo");
+function bloquearSistema(){
+  bloqueado = true;
+  localStorage.setItem("bloqueado","true");
+  document.getElementById("bloqueo").style.display="flex";
+  desactivarBotones();
 }
 
-void loop() {
+function desbloquearSistema(){
+  bloqueado = false;
+  localStorage.setItem("bloqueado","false");
+  document.getElementById("bloqueo").style.display="none";
+  activarBotones();
+}
 
-  if (Firebase.RTDB.getInt(&fbdo, "/grupo1")) {
+function activarBotones(){
+  document.querySelectorAll(".botonUser").forEach(b=>b.disabled=false);
+}
 
-    int valor = fbdo.intData();
+function desactivarBotones(){
+  document.querySelectorAll(".botonUser").forEach(b=>b.disabled=true);
+}
 
-    Serial.print("Valor recibido grupo1: ");
-    Serial.println(valor);
+// ================= LOGIN =================
 
-    if (valor == 1) {
+window.login = function(){
 
-      Serial.println("Activando rele prueba");
+  const pass = document.getElementById("password").value;
 
-      digitalWrite(PIN_PRUEBA, LOW);  // activar
-      delay(2000);
-      digitalWrite(PIN_PRUEBA, HIGH); // apagar
+  if(pass === ADMIN_PASSWORD){
+      esAdmin = true;
+      document.getElementById("adminPanel").style.display="block";
+      document.getElementById("loginBox").style.display="none";
+      activarBotones();
+      document.getElementById("password").value="";
+      return;
+  }
 
-      Firebase.RTDB.setInt(&fbdo, "/grupo1", 0);
+  if(pass === UNLOCK_PASSWORD){
+      desbloquearSistema();
+      document.getElementById("password").value="";
+      return;
+  }
 
-      Serial.println("Rele apagado y reset enviado");
+  alert("Contraseña incorrecta");
+  document.getElementById("password").value="";
+}
+
+// ================= TEMPORIZADOR =================
+
+function iniciarTemporizador(){
+  temporizador = setInterval(()=>{
+    tiempoRestante--;
+    document.getElementById("timer").innerText = tiempoRestante;
+
+    if(tiempoRestante<=0){
+      clearInterval(temporizador);
+      bloquearSistema();
     }
+  },1000);
+}
 
-  } else {
-    Serial.print("Error Firebase: ");
-    Serial.println(fbdo.errorReason());
+// ================= ENVÍO =================
+
+function enviar(ruta, valor){
+
+  if(bloqueado) return;
+
+  if(!esAdmin && !temporizador){
+      iniciarTemporizador();
   }
 
-  delay(500);
+  set(ref(db,ruta),valor);
 }
+
+window.enviarGrupo1 = v => enviar("grupo1",v);
+window.enviarGrupo2 = v => enviar("grupo2",v);
+
+// ================= ADMIN CONTROLES =================
+
+window.controlAdmin = function(num){
+
+  if(!esAdmin) return;
+
+  if(num==1){
+    enviar("grupo1",1);
+    enviar("grupo2",5);
+  }
+  if(num==2){
+    enviar("grupo1",2);
+    enviar("grupo2",6);
+  }
+  if(num==3){
+    enviar("grupo1",3);
+    enviar("grupo2",7);
+  }
+  if(num==4){
+    enviar("grupo1",4);
+    enviar("grupo2",8);
+  }
+}
+
+// ================= INICIO =================
+
+window.onload = function(){
+  if(bloqueado){
+    document.getElementById("bloqueo").style.display="flex";
+    desactivarBotones();
+  }
+}
+</script>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(135deg,#1a0033,#3a0072,#0f0c29);
+  color:white;
+  text-align:center;
+}
+
+button{
+  padding:12px;
+  margin:8px;
+  font-size:16px;
+  border:none;
+  border-radius:10px;
+  background:#1f1c2c;
+  color:white;
+  box-shadow:0 0 10px cyan;
+  cursor:pointer;
+}
+
+button:hover{
+  background:cyan;
+  color:black;
+}
+
+#adminPanel{
+  display:none;
+  margin-top:20px;
+}
+
+#bloqueo{
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.9);
+  color:white;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  font-size:25px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>INSTITUTO UNIVERSITARIO VIDA NUEVA</h1>
+
+<div id="loginBox">
+<h3>Acceso</h3>
+<input type="password" id="password" placeholder="Ingrese contraseña">
+<button onclick="login()">Ingresar</button>
+</div>
+
+<h3>Tiempo restante: <span id="timer">60</span> segundos</h3>
+
+<h2>Grupo A-D</h2>
+<button class="botonUser" onclick="enviarGrupo1(1)">Secuencia 1</button>
+<button class="botonUser" onclick="enviarGrupo1(2)">Secuencia 2</button>
+<button class="botonUser" onclick="enviarGrupo1(3)">Secuencia 3</button>
+<button class="botonUser" onclick="enviarGrupo1(4)">Secuencia 4</button>
+
+<h2>Grupo E-H</h2>
+<button class="botonUser" onclick="enviarGrupo2(5)">Secuencia 5</button>
+<button class="botonUser" onclick="enviarGrupo2(6)">Secuencia 6</button>
+<button class="botonUser" onclick="enviarGrupo2(7)">Secuencia 7</button>
+<button class="botonUser" onclick="enviarGrupo2(8)">Secuencia 8</button>
+
+<div id="adminPanel">
+<h2>Panel de Control Admin</h2>
+<button onclick="controlAdmin(1)">Control Admin 1</button>
+<button onclick="controlAdmin(2)">Control Admin 2</button>
+<button onclick="controlAdmin(3)">Control Admin 3</button>
+<button onclick="controlAdmin(4)">Control Admin 4</button>
+</div>
+
+<div id="bloqueo">
+⛔ Tiempo terminado<br>
+Solo un administrador puede desbloquear
+</div>
+
+</body>
+</html>

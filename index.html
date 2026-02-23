@@ -21,13 +21,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-window.enviarGrupo1 = function(valor){
-  set(ref(db,'grupo1'), valor);
+window.enviarGrupo1 = function(v){
+  set(ref(db,'grupo1'),v);
 }
 
-// ===== ANIMACIÓN =====
-function mover(nombre, estado){
-  const el = document.getElementById("cil_"+nombre);
+function mover(nombre,estado){
+  const el=document.getElementById("cil_"+nombre);
   if(estado==="OUT"){
     el.style.transform="translateX(80px)";
   }else{
@@ -35,10 +34,12 @@ function mover(nombre, estado){
   }
 }
 
-onValue(ref(db,'estado/A'), snap=> mover("A",snap.val()));
-onValue(ref(db,'estado/B'), snap=> mover("B",snap.val()));
-onValue(ref(db,'estado/C'), snap=> mover("C",snap.val()));
-onValue(ref(db,'estado/D'), snap=> mover("D",snap.val()));
+// ESCUCHAR TODOS
+["A","B","C","D","E","F","G","H"].forEach(c=>{
+  onValue(ref(db,'estado/'+c),(snap)=>{
+    if(snap.val()) mover(c,snap.val());
+  });
+});
 
 </script>
 
@@ -62,6 +63,8 @@ button{
 
 .sim{
   margin-top:40px;
+  display:grid;
+  grid-template-columns: repeat(4,1fr);
 }
 
 .cil{
@@ -81,29 +84,18 @@ button{
 
 <h1>INSTITUTO UNIVERSITARIO VIDA NUEVA</h1>
 
-<button onclick="enviarGrupo1(1)">Secuencia 1</button>
+<button onclick="enviarGrupo1(1)">Secuencia Demo</button>
 
 <div class="sim">
 
-<div class="cil">
-<div class="barra" id="cil_A"></div>
-<p>Cilindro A</p>
-</div>
-
-<div class="cil">
-<div class="barra" id="cil_B"></div>
-<p>Cilindro B</p>
-</div>
-
-<div class="cil">
-<div class="barra" id="cil_C"></div>
-<p>Cilindro C</p>
-</div>
-
-<div class="cil">
-<div class="barra" id="cil_D"></div>
-<p>Cilindro D</p>
-</div>
+<div class="cil"><div class="barra" id="cil_A"></div><p>A</p></div>
+<div class="cil"><div class="barra" id="cil_B"></div><p>B</p></div>
+<div class="cil"><div class="barra" id="cil_C"></div><p>C</p></div>
+<div class="cil"><div class="barra" id="cil_D"></div><p>D</p></div>
+<div class="cil"><div class="barra" id="cil_E"></div><p>E</p></div>
+<div class="cil"><div class="barra" id="cil_F"></div><p>F</p></div>
+<div class="cil"><div class="barra" id="cil_G"></div><p>G</p></div>
+<div class="cil"><div class="barra" id="cil_H"></div><p>H</p></div>
 
 </div>
 

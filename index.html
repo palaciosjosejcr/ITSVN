@@ -6,32 +6,36 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCNVbu2JsqcMIdfg7BJaItg8yssOJzxdOY",
   authDomain: "control-f7416.firebaseapp.com",
   databaseURL: "https://control-f7416-default-rtdb.firebaseio.com",
   projectId: "control-f7416",
-  storageBucket: "control-f7416.appspot.com",
-  messagingSenderId: "212032265098",
-  appId: "1:212032265098:web:14bf7575bf75c66f9bc673"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 // ================= CONTRASEÑAS =================
-const ADMIN_PASS = "admin123";
-const USER_PASS = "usuario123";
+window.ADMIN_PASS = "admin123";
+window.USER_PASS = "usuario123";
 
 let tiempo = 60;
 let timer = null;
-let bloqueado = localStorage.getItem("bloqueado");
+
+// ================= ENVÍO FIREBASE =================
+window.enviarGrupo1 = v => set(ref(db,'grupo1'),v);
+window.enviarGrupo2 = v => set(ref(db,'grupo2'),v);
+
+window.admin1 = ()=>{ set(ref(db,'grupo1'),1); set(ref(db,'grupo2'),5); }
+window.admin2 = ()=>{ set(ref(db,'grupo1'),2); set(ref(db,'grupo2'),6); }
+window.admin3 = ()=>{ set(ref(db,'grupo1'),3); set(ref(db,'grupo2'),7); }
+window.admin4 = ()=>{ set(ref(db,'grupo1'),4); set(ref(db,'grupo2'),8); }
 
 // ================= LOGIN =================
 window.login = function(){
-
   let pass = document.getElementById("password").value;
 
   if(pass === ADMIN_PASS){
@@ -39,21 +43,19 @@ window.login = function(){
     activarBotones(true);
     document.getElementById("adminPanel").style.display="block";
     document.getElementById("password").value="";
-    document.getElementById("estadoLogin").innerText="Modo Administrador";
     return;
   }
 
-  if(pass === USER_PASS && bloqueado !== "true"){
+  if(pass === USER_PASS){
     activarBotones(true);
     document.getElementById("adminPanel").style.display="none";
     iniciarTemporizador();
     document.getElementById("password").value="";
-    document.getElementById("estadoLogin").innerText="Modo Usuario";
     return;
   }
 
   document.getElementById("password").value="";
-  alert("Contraseña incorrecta o usuario bloqueado");
+  alert("Contraseña incorrecta");
 }
 
 // ================= TEMPORIZADOR =================
@@ -76,15 +78,26 @@ function iniciarTemporizador(){
 function bloquear(){
   activarBotones(false);
   localStorage.setItem("bloqueado","true");
-  bloqueado="true";
   document.getElementById("overlay").style.display="flex";
 }
 
 function desbloquear(){
   activarBotones(true);
   localStorage.setItem("bloqueado","false");
-  bloqueado="false";
   document.getElementById("overlay").style.display="none";
+}
+
+// 🔓 ESTA ES LA FUNCIÓN QUE FALTABA
+window.desbloquearConClave = function(){
+  let pass = document.getElementById("passwordUnlock").value;
+
+  if(pass === ADMIN_PASS){
+    desbloquear();
+    document.getElementById("passwordUnlock").value="";
+  }else{
+    document.getElementById("passwordUnlock").value="";
+    alert("Clave incorrecta");
+  }
 }
 
 // ================= BOTONES =================
@@ -94,31 +107,8 @@ function activarBotones(valor){
   });
 }
 
-// ================= ENVÍO FIREBASE =================
-window.enviarGrupo1 = v => set(ref(db,'grupo1'),v);
-window.enviarGrupo2 = v => set(ref(db,'grupo2'),v);
-
-window.admin1 = ()=>{ set(ref(db,'grupo1'),1); set(ref(db,'grupo2'),5); }
-window.admin2 = ()=>{ set(ref(db,'grupo1'),2); set(ref(db,'grupo2'),6); }
-window.admin3 = ()=>{ set(ref(db,'grupo1'),3); set(ref(db,'grupo2'),7); }
-window.admin4 = ()=>{ set(ref(db,'grupo1'),4); set(ref(db,'grupo2'),8); }
-
-// ================= SIMULACIÓN =================
-["A","B","C","D","E","F","G","H"].forEach(l=>{
-  onValue(ref(db,"estado/"+l),(snap)=>{
-    if(snap.exists()){
-      let el=document.getElementById("cil"+l);
-      if(snap.val()=="OUT"){
-        el.classList.add("activo");
-      }else{
-        el.classList.remove("activo");
-      }
-    }
-  });
-});
-
-// Estado inicial
-if(bloqueado === "true"){
+// ================= ESTADO INICIAL =================
+if(localStorage.getItem("bloqueado") === "true"){
   bloquear();
 }else{
   activarBotones(false);
@@ -134,14 +124,9 @@ body{
   text-align:center;
 }
 
-h1{
-  padding:20px;
-  text-shadow:0 0 15px #00f2ff;
-}
-
 button{
-  padding:12px 20px;
-  margin:8px;
+  padding:10px 18px;
+  margin:6px;
   border:none;
   border-radius:10px;
   cursor:pointer;
@@ -156,28 +141,6 @@ button:disabled{
 
 .admin{
   background:#ff00ff;
-  box-shadow:0 0 15px #ff00ff;
-}
-
-.sim{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:30px;
-  padding:40px;
-}
-
-.cil{
-  width:120px;
-  height:20px;
-  background:#ff00ff;
-  border-radius:10px;
-  transition:0.4s;
-  margin:auto;
-}
-
-.activo{
-  transform:translateX(40px);
-  background:#00ff99;
 }
 
 #overlay{
@@ -191,11 +154,10 @@ button:disabled{
   justify-content:center;
   align-items:center;
   flex-direction:column;
-  z-index:999;
 }
 
 .qr img{
-  width:160px;
+  width:150px;
 }
 </style>
 </head>
@@ -207,7 +169,7 @@ button:disabled{
 <h3>Acceso</h3>
 <input type="password" id="password" placeholder="Ingrese contraseña">
 <button onclick="login()">Ingresar</button>
-<p id="estadoLogin"></p>
+
 <p>Tiempo restante: <span id="timer">0</span> segundos</p>
 
 <h2>Grupo A - D</h2>
@@ -235,23 +197,11 @@ button:disabled{
 <img src="qr_github.png">
 </div>
 
-<h2>Simulación</h2>
-<div class="sim">
-<div><div id="cilA" class="cil"></div><p>A</p></div>
-<div><div id="cilB" class="cil"></div><p>B</p></div>
-<div><div id="cilC" class="cil"></div><p>C</p></div>
-<div><div id="cilD" class="cil"></div><p>D</p></div>
-<div><div id="cilE" class="cil"></div><p>E</p></div>
-<div><div id="cilF" class="cil"></div><p>F</p></div>
-<div><div id="cilG" class="cil"></div><p>G</p></div>
-<div><div id="cilH" class="cil"></div><p>H</p></div>
-</div>
-
 <div id="overlay">
 <h2>Tiempo terminado</h2>
-<p>Solo administrador puede desbloquear</p>
+<p>Ingrese clave de administrador</p>
 <input type="password" id="passwordUnlock" placeholder="Clave admin">
-<button onclick="if(document.getElementById('passwordUnlock').value===ADMIN_PASS){desbloquear();document.getElementById('passwordUnlock').value='';}">Desbloquear</button>
+<button onclick="desbloquearConClave()">Desbloquear</button>
 </div>
 
 </body>

@@ -18,106 +18,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// ================= CONTRASEÑAS =================
-window.ADMIN_PASS = "admin123";
-window.USER_PASS = "usuario123";
-
-let tiempo = 60;
-let timer = null;
-
-// ================= ENVÍO FIREBASE =================
 window.enviarGrupo1 = v => set(ref(db,'grupo1'),v);
 window.enviarGrupo2 = v => set(ref(db,'grupo2'),v);
-
-window.admin1 = ()=>{ set(ref(db,'grupo1'),1); set(ref(db,'grupo2'),5); }
-window.admin2 = ()=>{ set(ref(db,'grupo1'),2); set(ref(db,'grupo2'),6); }
-window.admin3 = ()=>{ set(ref(db,'grupo1'),3); set(ref(db,'grupo2'),7); }
-window.admin4 = ()=>{ set(ref(db,'grupo1'),4); set(ref(db,'grupo2'),8); }
-
-// ================= LOGIN =================
-window.login = function(){
-  let pass = document.getElementById("password").value;
-
-  if(pass === ADMIN_PASS){
-    desbloquear();
-    activarBotones(true);
-    document.getElementById("adminPanel").style.display="block";
-    document.getElementById("password").value="";
-    return;
-  }
-
-  if(pass === USER_PASS){
-    activarBotones(true);
-    document.getElementById("adminPanel").style.display="none";
-    iniciarTemporizador();
-    document.getElementById("password").value="";
-    return;
-  }
-
-  document.getElementById("password").value="";
-  alert("Contraseña incorrecta");
-}
-
-// ================= TEMPORIZADOR =================
-function iniciarTemporizador(){
-  tiempo = 60;
-  document.getElementById("timer").innerText = tiempo;
-
-  timer = setInterval(()=>{
-    tiempo--;
-    document.getElementById("timer").innerText = tiempo;
-
-    if(tiempo <= 0){
-      clearInterval(timer);
-      bloquear();
-    }
-  },1000);
-}
-
-// ================= BLOQUEO =================
-function bloquear(){
-  activarBotones(false);
-  localStorage.setItem("bloqueado","true");
-  document.getElementById("overlay").style.display="flex";
-}
-
-function desbloquear(){
-  activarBotones(true);
-  localStorage.setItem("bloqueado","false");
-  document.getElementById("overlay").style.display="none";
-}
-
-// 🔓 ESTA ES LA FUNCIÓN QUE FALTABA
-window.desbloquearConClave = function(){
-  let pass = document.getElementById("passwordUnlock").value;
-
-  if(pass === ADMIN_PASS){
-    desbloquear();
-    document.getElementById("passwordUnlock").value="";
-  }else{
-    document.getElementById("passwordUnlock").value="";
-    alert("Clave incorrecta");
-  }
-}
-
-// ================= BOTONES =================
-function activarBotones(valor){
-  document.querySelectorAll("button.control").forEach(b=>{
-    b.disabled = !valor;
-  });
-}
-
-// ================= ESTADO INICIAL =================
-if(localStorage.getItem("bloqueado") === "true"){
-  bloquear();
-}else{
-  activarBotones(false);
-}
 </script>
 
 <style>
 body{
-  margin:0;
   font-family:Arial;
   background:linear-gradient(135deg,#1a0033,#3a0072,#0f0c29);
   color:white;
@@ -125,39 +31,20 @@ body{
 }
 
 button{
-  padding:10px 18px;
-  margin:6px;
+  width:200px;
+  padding:12px;
+  margin:8px;
   border:none;
   border-radius:10px;
-  cursor:pointer;
   background:#1f1c2c;
   color:white;
   box-shadow:0 0 15px #00f2ff;
+  cursor:pointer;
 }
 
-button:disabled{
-  opacity:0.3;
-}
-
-.admin{
-  background:#ff00ff;
-}
-
-#overlay{
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.9);
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-}
-
-.qr img{
-  width:150px;
+button:hover{
+  background:#00f2ff;
+  color:black;
 }
 </style>
 </head>
@@ -166,43 +53,20 @@ button:disabled{
 
 <h1>INSTITUTO UNIVERSITARIO VIDA NUEVA</h1>
 
-<h3>Acceso</h3>
-<input type="password" id="password" placeholder="Ingrese contraseña">
-<button onclick="login()">Ingresar</button>
-
-<p>Tiempo restante: <span id="timer">0</span> segundos</p>
-
 <h2>Grupo A - D</h2>
-<button class="control" onclick="enviarGrupo1(1)">Secuencia 1</button>
-<button class="control" onclick="enviarGrupo1(2)">Secuencia 2</button>
-<button class="control" onclick="enviarGrupo1(3)">Secuencia 3</button>
-<button class="control" onclick="enviarGrupo1(4)">Secuencia 4</button>
+<button onclick="enviarGrupo1(1)">Secuencia 1</button>
+<button onclick="enviarGrupo1(2)">Secuencia 2</button>
+<button onclick="enviarGrupo1(3)">Secuencia 3</button>
+<button onclick="enviarGrupo1(4)">Secuencia 4</button>
 
 <h2>Grupo E - H</h2>
-<button class="control" onclick="enviarGrupo2(5)">Secuencia 5</button>
-<button class="control" onclick="enviarGrupo2(6)">Secuencia 6</button>
-<button class="control" onclick="enviarGrupo2(7)">Secuencia 7</button>
-<button class="control" onclick="enviarGrupo2(8)">Secuencia 8</button>
+<button onclick="enviarGrupo2(5)">Secuencia 5</button>
+<button onclick="enviarGrupo2(6)">Secuencia 6</button>
+<button onclick="enviarGrupo2(7)">Secuencia 7</button>
+<button onclick="enviarGrupo2(8)">Secuencia 8</button>
 
-<div id="adminPanel" style="display:none;">
-<h2>Controles Administrador</h2>
-<button class="control admin" onclick="admin1()">Control Admin 1</button>
-<button class="control admin" onclick="admin2()">Control Admin 2</button>
-<button class="control admin" onclick="admin3()">Control Admin 3</button>
-<button class="control admin" onclick="admin4()">Control Admin 4</button>
-</div>
-
-<div class="qr">
-<h3>Escanea para acceder</h3>
-<img src="qr_github.png">
-</div>
-
-<div id="overlay">
-<h2>Tiempo terminado</h2>
-<p>Ingrese clave de administrador</p>
-<input type="password" id="passwordUnlock" placeholder="Clave admin">
-<button onclick="desbloquearConClave()">Desbloquear</button>
-</div>
+<br><br>
+<img src="qr_github.png" width="180">
 
 </body>
 </html>

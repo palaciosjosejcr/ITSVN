@@ -1,136 +1,15 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>INSTITUTO UNIVERSITARIO VIDA NUEVA</title>
 
-<style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:linear-gradient(135deg,#1a0033,#3a0072,#0f0c29);
-  color:white;
-  text-align:center;
-}
-
-header{
-  padding:20px;
-  font-size:28px;
-  font-weight:bold;
-  text-shadow:0 0 15px #00f2ff;
-}
-
-button{
-  padding:12px 25px;
-  margin:10px;
-  font-size:16px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  background:#1f1c2c;
-  color:white;
-  box-shadow:0 0 15px #00f2ff;
-  transition:0.3s;
-}
-
-button:hover{
-  background:#00f2ff;
-  color:black;
-}
-
-.admin{
-  background:#ff00ff;
-  box-shadow:0 0 20px #ff00ff;
-}
-
-.qr{
-  margin-top:30px;
-}
-
-.simulacion{
-  margin-top:40px;
-  display:none;
-}
-
-.cilindro{
-  width:200px;
-  height:20px;
-  background:#222;
-  margin:10px auto;
-  border-radius:10px;
-  position:relative;
-  overflow:hidden;
-}
-
-.cilindro::after{
-  content:"";
-  position:absolute;
-  left:0;
-  top:0;
-  height:100%;
-  width:0%;
-  background:#00f2ff;
-  transition:1s;
-}
-
-.cilindro.activo::after{
-  width:100%;
-}
-</style>
-</head>
-
-<body>
-
-<header>INSTITUTO UNIVERSITARIO VIDA NUEVA</header>
-
-<h3>Acceso Administrador</h3>
-<input type="password" id="clave" placeholder="Ingrese contraseña">
-<button onclick="login()">Ingresar</button>
-
-<h2>Grupo A - D</h2>
-<button onclick="enviarGrupo1(1)">Secuencia 1</button>
-<button onclick="enviarGrupo1(2)">Secuencia 2</button>
-<button onclick="enviarGrupo1(3)">Secuencia 3</button>
-<button onclick="enviarGrupo1(4)">Secuencia 4</button>
-
-<h2>Grupo E - H</h2>
-<button onclick="enviarGrupo2(5)">Secuencia 5</button>
-<button onclick="enviarGrupo2(6)">Secuencia 6</button>
-<button onclick="enviarGrupo2(7)">Secuencia 7</button>
-<button onclick="enviarGrupo2(8)">Secuencia 8</button>
-
-<div id="adminPanel" style="display:none;">
-<h2>Controles Administrador</h2>
-<button class="admin" onclick="controlAdmin('I')">Control Admin 1</button>
-<button class="admin" onclick="controlAdmin('J')">Control Admin 2</button>
-<button class="admin" onclick="controlAdmin('K')">Control Admin 3</button>
-<button class="admin" onclick="controlAdmin('L')">Control Admin 4</button>
-</div>
-
-<div class="qr">
-<h3>Escanea para acceder</h3>
-<img src="qr_github.png" width="200">
-</div>
-
-<div class="simulacion" id="simulacion">
-<h2>Simulación de Válvulas</h2>
-<div class="cilindro" id="A"></div>
-<div class="cilindro" id="B"></div>
-<div class="cilindro" id="C"></div>
-<div class="cilindro" id="D"></div>
-<div class="cilindro" id="E"></div>
-<div class="cilindro" id="F"></div>
-<div class="cilindro" id="G"></div>
-<div class="cilindro" id="H"></div>
-</div>
-
-<!-- ================= FIREBASE ================= -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
+  apiKey: "AIzaSyCNVbu2JsqcMIdfg7BJaItg8yssOJzxdOY",
   authDomain: "control-f7416.firebaseapp.com",
   databaseURL: "https://control-f7416-default-rtdb.firebaseio.com",
   projectId: "control-f7416",
@@ -142,46 +21,91 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-window.enviarGrupo1 = (v)=> set(ref(db,'grupo1'),v);
-window.enviarGrupo2 = (v)=> set(ref(db,'grupo2'),v);
+window.enviarGrupo1 = function(valor){
+  set(ref(db,'grupo1'), valor);
+}
 
-window.controlAdmin = (v)=>{
-  set(ref(db,'admin'),v);
-  setTimeout(()=>{
-    set(ref(db,'admin'),"");
-  },800);
-  simular();
-};
-</script>
-
-<!-- ================= JS NORMAL ================= -->
-<script>
-function login(){
-  const clave = document.getElementById("clave").value;
-  if(clave==="1234"){
-    document.getElementById("adminPanel").style.display="block";
-    document.getElementById("clave").value="";
+// ===== ANIMACIÓN =====
+function mover(nombre, estado){
+  const el = document.getElementById("cil_"+nombre);
+  if(estado==="OUT"){
+    el.style.transform="translateX(80px)";
   }else{
-    alert("Contraseña incorrecta");
-    document.getElementById("clave").value="";
+    el.style.transform="translateX(0px)";
   }
 }
 
-function simular(){
-  document.getElementById("simulacion").style.display="block";
-  const lista=["A","B","C","D","E","F","G","H"];
-  lista.forEach((id,i)=>{
-    setTimeout(()=>{
-      document.getElementById(id).classList.add("activo");
-    },i*300);
-  });
-  setTimeout(()=>{
-    lista.forEach(id=>{
-      document.getElementById(id).classList.remove("activo");
-    });
-  },4000);
-}
+onValue(ref(db,'estado/A'), snap=> mover("A",snap.val()));
+onValue(ref(db,'estado/B'), snap=> mover("B",snap.val()));
+onValue(ref(db,'estado/C'), snap=> mover("C",snap.val()));
+onValue(ref(db,'estado/D'), snap=> mover("D",snap.val()));
+
 </script>
+
+<style>
+body{
+  background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+  color:white;
+  font-family:Arial;
+  text-align:center;
+}
+
+button{
+  padding:15px;
+  margin:20px;
+  font-size:18px;
+  border:none;
+  border-radius:10px;
+  background:#00f2ff;
+  cursor:pointer;
+}
+
+.sim{
+  margin-top:40px;
+}
+
+.cil{
+  margin:20px;
+}
+
+.barra{
+  width:80px;
+  height:20px;
+  background:#ff00ff;
+  transition:0.5s;
+}
+</style>
+</head>
+
+<body>
+
+<h1>INSTITUTO UNIVERSITARIO VIDA NUEVA</h1>
+
+<button onclick="enviarGrupo1(1)">Secuencia 1</button>
+
+<div class="sim">
+
+<div class="cil">
+<div class="barra" id="cil_A"></div>
+<p>Cilindro A</p>
+</div>
+
+<div class="cil">
+<div class="barra" id="cil_B"></div>
+<p>Cilindro B</p>
+</div>
+
+<div class="cil">
+<div class="barra" id="cil_C"></div>
+<p>Cilindro C</p>
+</div>
+
+<div class="cil">
+<div class="barra" id="cil_D"></div>
+<p>Cilindro D</p>
+</div>
+
+</div>
 
 </body>
 </html>

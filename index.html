@@ -2,8 +2,8 @@
 #include <Firebase_ESP_Client.h>
 
 // ================= WIFI =================
-#define WIFI_SSID "Estudiantes ITSVN"
-#define WIFI_PASSWORD "Estudiantes2018*"
+#define WIFI_SSID "CELERITY_FAUSTO"
+#define WIFI_PASSWORD "Fausto1143"
 
 // ================= FIREBASE =================
 #define API_KEY "AIzaSyCNVbu2JsqcMIdfg7BJaItg8yssOJzxdOY"
@@ -13,65 +13,20 @@ FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 
-// ================= PINES GRUPO 1 =================
-#define A_mas 16
-#define A_menos 23
-#define B_mas 19
-#define B_menos 21
-#define C_mas 5
-#define C_menos 18
-#define D_mas 17
+// ===== PIN DE PRUEBA (usa uno de tus relés reales) =====
+#define PIN_PRUEBA 16   // cambia si quieres probar otro
 
-// ================= PINES GRUPO 2 =================
-#define E_mas 26
-#define E_menos 27
-#define F_mas 32
-#define F_menos 33
-#define G_mas 25
-#define G_menos 14
-#define H_mas 13
-
-bool grupo1_ocupado = false;
-bool grupo2_ocupado = false;
-
-// ================= RELÉ ACTIVO EN LOW =================
-void activar(int pin){ digitalWrite(pin, LOW); }
-void desactivar(int pin){ digitalWrite(pin, HIGH); }
-
-void pulso(int pin, int tiempo=300){
-  activar(pin);
-  delay(tiempo);
-  desactivar(pin);
-}
-
-void esperar(){ delay(1000); }
-
-// ================= APAGAR =================
-void apagarGrupo1(){
-  int p[] = {A_mas,A_menos,B_mas,B_menos,C_mas,C_menos,D_mas};
-  for(int i=0;i<7;i++) digitalWrite(p[i], HIGH);
-}
-
-void apagarGrupo2(){
-  int p[] = {E_mas,E_menos,F_mas,F_menos,G_mas,G_menos,H_mas};
-  for(int i=0;i<7;i++) digitalWrite(p[i], HIGH);
-}
-
-// ================= SETUP =================
-void setup(){
+void setup() {
 
   Serial.begin(115200);
+  pinMode(PIN_PRUEBA, OUTPUT);
 
-  int pines[] = {
-    A_mas,A_menos,B_mas,B_menos,C_mas,C_menos,D_mas,
-    E_mas,E_menos,F_mas,F_menos,G_mas,G_menos,H_mas
-  };
+  // Relé apagado (activo en LOW)
+  digitalWrite(PIN_PRUEBA, HIGH);
 
-  for(int i=0;i<14;i++){
-    pinMode(pines[i], OUTPUT);
-    digitalWrite(pines[i], HIGH); // todos apagados
-  }
+  Serial.println("Iniciando sistema...");
 
+  // ===== WIFI =====
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Conectando WiFi");
 
@@ -81,7 +36,10 @@ void setup(){
   }
 
   Serial.println("\nWiFi conectado");
+  Serial.print("IP: ");
+  Serial.println(WiFi.localIP());
 
+  // ===== FIREBASE =====
   config.api_key = API_KEY;
   config.database_url = DATABASE_URL;
 
@@ -94,135 +52,32 @@ void setup(){
   Serial.println("Firebase listo");
 }
 
-// ================= SECUENCIAS GRUPO 1 =================
-void F1(){
-  Serial.println("Ejecutando F1");
-  pulso(A_mas); esperar();
-  pulso(B_mas); esperar();
-  pulso(C_mas); esperar();
-  activar(D_mas); esperar();
-  pulso(A_menos); esperar();
-  pulso(B_menos); esperar();
-  activar(C_menos); delay(1500);
-  desactivar(D_mas);
-  desactivar(C_menos);
-  apagarGrupo1();
-}
+void loop() {
 
-void F2(){
-  Serial.println("Ejecutando F2");
-  activar(A_mas); activar(B_mas); activar(C_mas); activar(D_mas);
-  delay(2000);
-  desactivar(A_mas); desactivar(B_mas); desactivar(C_mas);
-  activar(A_menos); activar(B_menos); activar(C_menos);
-  desactivar(D_mas);
-  delay(2000);
-  apagarGrupo1();
-}
+  if (Firebase.RTDB.getInt(&fbdo, "/grupo1")) {
 
-void F3(){
-  Serial.println("Ejecutando F3");
-  pulso(A_mas); pulso(B_mas); esperar();
-  pulso(C_mas); activar(D_mas); esperar();
-  pulso(A_menos); pulso(B_menos); esperar();
-  activar(C_menos); desactivar(D_mas);
-  delay(500);
-  desactivar(C_menos);
-  apagarGrupo1();
-}
+    int valor = fbdo.intData();
 
-void F4(){
-  Serial.println("Ejecutando F4");
-  pulso(A_mas); pulso(B_mas); esperar();
-  pulso(A_menos); pulso(B_menos); esperar();
-  pulso(C_mas); activar(D_mas); esperar();
-  activar(C_menos); desactivar(D_mas);
-  delay(500);
-  desactivar(C_menos);
-  apagarGrupo1();
-}
+    Serial.print("Valor recibido grupo1: ");
+    Serial.println(valor);
 
-// ================= SECUENCIAS GRUPO 2 =================
-void F5(){
-  Serial.println("Ejecutando F5");
-  pulso(E_mas); esperar();
-  pulso(F_mas); esperar();
-  pulso(G_mas); esperar();
-  activar(H_mas); delay(1500);
-  desactivar(H_mas);
-  apagarGrupo2();
-}
+    if (valor == 1) {
 
-void F6(){
-  Serial.println("Ejecutando F6");
-  activar(E_mas); activar(F_mas); activar(G_mas); activar(H_mas);
-  delay(2000);
-  desactivar(E_mas); desactivar(F_mas); desactivar(G_mas);
-  activar(E_menos); activar(F_menos); activar(G_menos);
-  desactivar(H_mas);
-  delay(2000);
-  apagarGrupo2();
-}
+      Serial.println("Activando rele prueba");
 
-void F7(){
-  Serial.println("Ejecutando F7");
-  pulso(E_mas); pulso(F_mas); esperar();
-  pulso(G_mas); activar(H_mas); delay(1000);
-  desactivar(H_mas);
-  apagarGrupo2();
-}
+      digitalWrite(PIN_PRUEBA, LOW);  // activar
+      delay(2000);
+      digitalWrite(PIN_PRUEBA, HIGH); // apagar
 
-void F8(){
-  Serial.println("Ejecutando F8");
-  activar(E_mas); activar(F_mas); activar(G_mas); activar(H_mas);
-  delay(1500);
-  desactivar(E_mas); desactivar(F_mas); desactivar(G_mas);
-  activar(E_menos); activar(F_menos); activar(G_menos);
-  desactivar(H_mas);
-  delay(1500);
-  apagarGrupo2();
-}
+      Firebase.RTDB.setInt(&fbdo, "/grupo1", 0);
 
-// ================= LOOP =================
-void loop(){
-
-  if(!grupo1_ocupado){
-    if(Firebase.RTDB.getInt(&fbdo, "/grupo1")){
-      int valor = fbdo.intData();
-      Serial.print("Grupo1 recibido: ");
-      Serial.println(valor);
-
-      if(valor>=1 && valor<=4){
-        grupo1_ocupado = true;
-
-        if(valor==1) F1();
-        if(valor==2) F2();
-        if(valor==3) F3();
-        if(valor==4) F4();
-
-        Firebase.RTDB.setInt(&fbdo, "/grupo1", 0);
-        grupo1_ocupado = false;
-      }
+      Serial.println("Rele apagado y reset enviado");
     }
+
+  } else {
+    Serial.print("Error Firebase: ");
+    Serial.println(fbdo.errorReason());
   }
 
-  if(!grupo2_ocupado){
-    if(Firebase.RTDB.getInt(&fbdo, "/grupo2")){
-      int valor = fbdo.intData();
-      Serial.print("Grupo2 recibido: ");
-      Serial.println(valor);
-
-      if(valor>=5 && valor<=8){
-        grupo2_ocupado = true;
-
-        if(valor==5) F5();
-        if(valor==6) F6();
-        if(valor==7) F7();
-        if(valor==8) F8();
-
-        Firebase.RTDB.setInt(&fbdo, "/grupo2", 0);
-        grupo2_ocupado = false;
-      }
-    }
-  }
+  delay(500);
 }

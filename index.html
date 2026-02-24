@@ -44,7 +44,7 @@ function iniciarTemporizador(){
   },1000);
 }
 
-// ================= BLOQUEO GENERAL =================
+// ================= BLOQUEO POR TIEMPO =================
 function bloquearSistema(){
   bloqueado = true;
   localStorage.setItem("bloqueado","true");
@@ -78,6 +78,7 @@ window.enviarGrupo2 = v => enviar("grupo2",v);
 // ================= LOGIN =================
 window.login = function(){
   const pass = document.getElementById("password").value;
+
   if(pass === ADMIN_PASSWORD){
       esAdmin = true;
       document.getElementById("adminPanel").style.display="block";
@@ -89,9 +90,9 @@ window.login = function(){
   }
 };
 
-// ================= DESBLOQUEO ADMIN =================
 window.desbloqueoAdmin = function(){
   const pass = document.getElementById("adminUnlock").value;
+
   if(pass === ADMIN_PASSWORD){
       desbloquearSistema();
       document.getElementById("adminUnlock").value="";
@@ -104,6 +105,7 @@ window.desbloqueoAdmin = function(){
 // ================= ADMIN CONTROLES =================
 window.controlAdmin = function(num){
   if(!esAdmin) return;
+
   if(num==1){ enviar("grupo1",1); enviar("grupo2",5); }
   if(num==2){ enviar("grupo1",2); enviar("grupo2",6); }
   if(num==3){ enviar("grupo1",3); enviar("grupo2",7); }
@@ -117,6 +119,7 @@ const dislikesRef = ref(db,"dislikes");
 onValue(likesRef, s=>{
   document.getElementById("likes").innerText = s.val() || 0;
 });
+
 onValue(dislikesRef, s=>{
   document.getElementById("dislikes").innerText = s.val() || 0;
 });
@@ -144,8 +147,7 @@ body{
   margin:0;
   font-family:Arial;
   color:white;
-  background-color:#2b0a4a;
-  background-image:
+  background:
     linear-gradient(
       rgba(15,12,41,0.85),
       rgba(58,0,114,0.85),
@@ -202,9 +204,6 @@ button:hover{
 #adminPanel{
   display:none;
   margin-top:20px;
-  background:rgba(255,255,255,0.1);
-  padding:15px;
-  border-radius:10px;
 }
 
 #bloqueo{

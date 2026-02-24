@@ -27,6 +27,7 @@ let esAdmin = false;
 let tiempoRestante = 60;
 let temporizador = null;
 let bloqueado = localStorage.getItem("bloqueado") === "true";
+let ejecucionActiva = false;
 
 
 // ================= TIMER =================
@@ -46,7 +47,7 @@ function iniciarTemporizador(){
 }
 
 
-// ================= BLOQUEO =================
+// ================= BLOQUEO GENERAL =================
 function bloquearSistema(){
   bloqueado = true;
   localStorage.setItem("bloqueado","true");
@@ -64,7 +65,11 @@ function desbloquearSistema(){
   activarBotones();
 }
 
+
+// ================= BOTONES =================
 function activarBotones(){
+  ejecucionActiva = false;
+
   const textos = [
     "Secuencia 1","Secuencia 2","Secuencia 3","Secuencia 4",
     "Secuencia 5","Secuencia 6","Secuencia 7","Secuencia 8"
@@ -79,6 +84,8 @@ function activarBotones(){
 }
 
 function desactivarBotones(){
+  ejecucionActiva = true;
+
   document.querySelectorAll(".botonUser").forEach(b=>{
     b.disabled = true;
     b.style.background = "#8b0000";
@@ -120,69 +127,57 @@ window.desbloqueoAdmin = function(){
 // ================= ENVÍO SECUENCIAS =================
 function enviar(ruta, valor){
 
-  if(bloqueado) return;
+  if(bloqueado || ejecucionActiva) return;
 
   if(!esAdmin && temporizador === null){
       iniciarTemporizador();
   }
 
   desactivarBotones();
-
   set(ref(db,ruta),valor);
-
-  setTimeout(()=>{
-      if(!bloqueado){
-          activarBotones();
-      }
-  },4000);
 }
 
 window.enviarGrupo1 = v => enviar("grupo1",v);
 window.enviarGrupo2 = v => enviar("grupo2",v);
 
 
-// ================= ADMIN CONTROLES =================
-window.controlAdmin = function(num){
+// ================= ESP TERMINÓ =================
+const grupo1Ref = ref(db, "grupo1");
+const grupo2Ref = ref(db, "grupo2");
 
-  if(!esAdmin) return;
+onValue(grupo1Ref, (snapshot)=>{
+  if(snapshot.val() === 0 && ejecucionActiva){
+    activarBotones();
+  }
+});
 
-  desactivarBotones();
-
-  if(num==1){ enviar("grupo1",1); enviar("grupo2",5); }
-  if(num==2){ enviar("grupo1",2); enviar("grupo2",6); }
-  if(num==3){ enviar("grupo1",3); enviar("grupo2",7); }
-  if(num==4){ enviar("grupo1",4); enviar("grupo2",8); }
-
-  setTimeout(()=>{
-      if(!bloqueado){
-          activarBotones();
-      }
-  },5000);
-}
+onValue(grupo2Ref, (snapshot)=>{
+  if(snapshot.val() === 0 && ejecucionActiva){
+    activarBotones();
+  }
+});
 
 
 // ================= LIKES =================
 const likesRef = ref(db, "likes");
 const dislikesRef = ref(db, "dislikes");
 
-onValue(likesRef, (snapshot) => {
+onValue(likesRef, (snapshot)=>{
   document.getElementById("likes").innerText = snapshot.val() || 0;
 });
 
-onValue(dislikesRef, (snapshot) => {
+onValue(dislikesRef, (snapshot)=>{
   document.getElementById("dislikes").innerText = snapshot.val() || 0;
 });
 
 window.darLike = async function(){
   const snapshot = await get(likesRef);
-  const actual = snapshot.val() || 0;
-  await set(likesRef, actual + 1);
+  await set(likesRef,(snapshot.val()||0)+1);
 }
 
 window.darDislike = async function(){
   const snapshot = await get(dislikesRef);
-  const actual = snapshot.val() || 0;
-  await set(dislikesRef, actual + 1);
+  await set(dislikesRef,(snapshot.val()||0)+1);
 }
 
 
@@ -200,9 +195,21 @@ window.onload = function(){
 body{
   margin:0;
   font-family:Arial;
-  background:linear-gradient(135deg,#1a0033,#3a0072,#0f0c29);
   color:white;
+
+  background: linear-gradient(
+      rgba(15,12,41,0.88),
+      rgba(58,0,114,0.88),
+      rgba(26,0,51,0.88)
+    ),
+    url("logo.png");
+
+  background-repeat:no-repeat;
+  background-position:center;
+  background-size:600px;
+  background-attachment:fixed;
 }
+
 header{
   text-align:center;
   padding:20px;
@@ -210,12 +217,15 @@ header{
   font-weight:bold;
   text-shadow:0 0 15px cyan;
 }
+
 .container{
   display:flex;
   justify-content:space-between;
   padding:30px;
 }
+
 .left{ width:55%; }
+
 .right{
   width:35%;
   background:rgba(255,255,255,0.1);
@@ -224,6 +234,7 @@ header{
   text-align:center;
   box-shadow:0 0 20px magenta;
 }
+
 button{
   padding:12px;
   margin:8px;
@@ -234,10 +245,12 @@ button{
   box-shadow:0 0 10px cyan;
   cursor:pointer;
 }
+
 button:hover{
   background:cyan;
   color:black;
 }
+
 #adminPanel{
   display:none;
   margin-top:20px;
@@ -245,6 +258,7 @@ button:hover{
   padding:15px;
   border-radius:10px;
 }
+
 #bloqueo{
   display:none;
   position:fixed;
@@ -276,10 +290,10 @@ button:hover{
 
 <h3 style="text-align:center;">¿Te gustó el proyecto?</h3>
 <div style="text-align:center;">
-  <button onclick="darLike()">👍 Me gusta</button>
-  <span id="likes">0</span>
-  <button onclick="darDislike()">👎 No me gusta</button>
-  <span id="dislikes">0</span>
+<button onclick="darLike()">👍 Me gusta</button>
+<span id="likes">0</span>
+<button onclick="darDislike()">👎 No me gusta</button>
+<span id="dislikes">0</span>
 </div>
 
 <div class="container">

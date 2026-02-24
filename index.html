@@ -141,19 +141,16 @@ window.enviarGrupo1 = v => enviar("grupo1",v);
 window.enviarGrupo2 = v => enviar("grupo2",v);
 
 
-// ================= ESP TERMINÓ =================
-const grupo1Ref = ref(db, "grupo1");
-const grupo2Ref = ref(db, "grupo2");
-
-onValue(grupo1Ref, (snapshot)=>{
-  if(snapshot.val() === 0 && ejecucionActiva){
-    activarBotones();
+// ================= DESBLOQUEO AUTOMÁTICO =================
+onValue(ref(db,"grupo1"), (snapshot)=>{
+  if(ejecucionActiva && snapshot.val() === 0){
+      activarBotones();
   }
 });
 
-onValue(grupo2Ref, (snapshot)=>{
-  if(snapshot.val() === 0 && ejecucionActiva){
-    activarBotones();
+onValue(ref(db,"grupo2"), (snapshot)=>{
+  if(ejecucionActiva && snapshot.val() === 0){
+      activarBotones();
   }
 });
 
@@ -202,7 +199,7 @@ body{
       rgba(58,0,114,0.88),
       rgba(26,0,51,0.88)
     ),
-    url("logo.png");
+    url("./logo.png");
 
   background-repeat:no-repeat;
   background-position:center;

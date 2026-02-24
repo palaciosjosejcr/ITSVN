@@ -29,7 +29,6 @@ let temporizador = null;
 let bloqueado = localStorage.getItem("bloqueado") === "true";
 let secuenciaEnProceso = false;
 
-
 // ================= TIMER =================
 function actualizarTimer(){
   document.getElementById("timer").innerText = tiempoRestante;
@@ -45,7 +44,6 @@ function iniciarTemporizador(){
     }
   },1000);
 }
-
 
 // ================= BLOQUEO GENERAL =================
 function bloquearSistema(){
@@ -64,7 +62,6 @@ function desbloquearSistema(){
   document.getElementById("bloqueo").style.display="none";
   activarBotones();
 }
-
 
 // ================= BOTONES =================
 function activarBotones(){
@@ -94,8 +91,7 @@ function desactivarBotones(){
   });
 }
 
-
-// ================= ENVÍO SECUENCIA =================
+// ================= ENVÍO =================
 function enviar(ruta, valor){
 
   if(bloqueado || secuenciaEnProceso) return;
@@ -111,7 +107,6 @@ function enviar(ruta, valor){
 window.enviarGrupo1 = v => enviar("grupo1",v);
 window.enviarGrupo2 = v => enviar("grupo2",v);
 
-
 // ================= DESBLOQUEO CUANDO ESP TERMINA =================
 onValue(ref(db,"grupo1"), snapshot=>{
   if(secuenciaEnProceso && snapshot.val() === 0){
@@ -124,7 +119,6 @@ onValue(ref(db,"grupo2"), snapshot=>{
     activarBotones();
   }
 });
-
 
 // ================= LOGIN =================
 window.login = function(){
@@ -141,6 +135,27 @@ window.login = function(){
   }
 };
 
+// ================= DESBLOQUEO ADMIN =================
+window.desbloqueoAdmin = function(){
+  const pass = document.getElementById("adminUnlock").value;
+  if(pass === ADMIN_PASSWORD){
+      desbloquearSistema();
+      document.getElementById("adminUnlock").value="";
+  } else {
+      alert("Contraseña incorrecta");
+      document.getElementById("adminUnlock").value="";
+  }
+};
+
+// ================= ADMIN CONTROLES =================
+window.controlAdmin = function(num){
+  if(!esAdmin) return;
+  desactivarBotones();
+  if(num==1){ enviar("grupo1",1); enviar("grupo2",5); }
+  if(num==2){ enviar("grupo1",2); enviar("grupo2",6); }
+  if(num==3){ enviar("grupo1",3); enviar("grupo2",7); }
+  if(num==4){ enviar("grupo1",4); enviar("grupo2",8); }
+};
 
 // ================= LIKES =================
 const likesRef = ref(db,"likes");
@@ -163,6 +178,13 @@ window.darDislike = async ()=>{
   await set(dislikesRef,(snap.val()||0)+1);
 };
 
+window.onload = function(){
+  actualizarTimer();
+  if(bloqueado){
+    document.getElementById("bloqueo").style.display="flex";
+    desactivarBotones();
+  }
+};
 </script>
 
 <style>
@@ -171,15 +193,19 @@ body{
   font-family:Arial;
   color:white;
 
-  background: linear-gradient(
-    rgba(15,12,41,0.9),
-    rgba(58,0,114,0.9),
-    rgba(26,0,51,0.9)
-  ), url("./logo.png");
+  background-color:#2b0a4a;
 
-  background-size:600px;
+  background-image:
+    linear-gradient(
+      rgba(15,12,41,0.85),
+      rgba(58,0,114,0.85),
+      rgba(26,0,51,0.85)
+    ),
+    url("./logo.png");
+
   background-repeat:no-repeat;
   background-position:center;
+  background-size:450px;
   background-attachment:fixed;
 }
 
@@ -189,6 +215,23 @@ header{
   font-size:28px;
   font-weight:bold;
   text-shadow:0 0 15px cyan;
+}
+
+.container{
+  display:flex;
+  justify-content:space-between;
+  padding:30px;
+}
+
+.left{ width:55%; }
+
+.right{
+  width:35%;
+  background:rgba(255,255,255,0.1);
+  padding:20px;
+  border-radius:15px;
+  text-align:center;
+  box-shadow:0 0 20px magenta;
 }
 
 button{
@@ -206,6 +249,29 @@ button:hover{
   background:cyan;
   color:black;
 }
+
+#adminPanel{
+  display:none;
+  margin-top:20px;
+  background:rgba(255,255,255,0.1);
+  padding:15px;
+  border-radius:10px;
+}
+
+#bloqueo{
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:linear-gradient(135deg,#000000,#1a0033,#000000);
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  font-size:24px;
+  z-index:9999;
+}
 </style>
 </head>
 
@@ -213,13 +279,24 @@ button:hover{
 
 <header>TECNOLOGICO UNIVERSITARIO VIDA NUEVA</header>
 
-<h3 style="text-align:center">¿Te gustó el proyecto?</h3>
+<div style="text-align:center" id="loginBox">
+<h3>Acceso Administrador</h3>
+<input type="password" id="password" placeholder="Ingrese contraseña">
+<button onclick="login()">Ingresar</button>
+</div>
+
+<h3 style="text-align:center">Tiempo restante: <span id="timer">60</span> segundos</h3>
+
+<h3 style="text-align:center;">¿Te gustó el proyecto?</h3>
 <div style="text-align:center;">
 <button onclick="darLike()">👍 Me gusta</button>
 <span id="likes">0</span>
 <button onclick="darDislike()">👎 No me gusta</button>
 <span id="dislikes">0</span>
 </div>
+
+<div class="container">
+<div class="left">
 
 <h2>Grupo A-D</h2>
 <button class="botonUser" onclick="enviarGrupo1(1)">Secuencia 1</button>
@@ -232,6 +309,31 @@ button:hover{
 <button class="botonUser" onclick="enviarGrupo2(6)">Secuencia 6</button>
 <button class="botonUser" onclick="enviarGrupo2(7)">Secuencia 7</button>
 <button class="botonUser" onclick="enviarGrupo2(8)">Secuencia 8</button>
+
+<div id="adminPanel">
+<h2>Panel Admin</h2>
+<button onclick="controlAdmin(1)">Control Admin 1</button>
+<button onclick="controlAdmin(2)">Control Admin 2</button>
+<button onclick="controlAdmin(3)">Control Admin 3</button>
+<button onclick="controlAdmin(4)">Control Admin 4</button>
+</div>
+
+</div>
+
+<div class="right">
+<h3>Escanea para acceder</h3>
+<img src="qr_github.png" width="200">
+<p>Comparte esta página</p>
+</div>
+</div>
+
+<div id="bloqueo">
+<h2>⛔ Tiempo terminado</h2>
+<p>Solo un administrador puede desbloquear</p>
+<input type="password" id="adminUnlock" placeholder="Contraseña administrador">
+<br><br>
+<button onclick="desbloqueoAdmin()">Desbloquear</button>
+</div>
 
 </body>
 </html>

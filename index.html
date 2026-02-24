@@ -28,7 +28,6 @@ let esAdmin = false;
 let tiempoRestante = 60;
 let temporizador = null;
 let bloqueado = localStorage.getItem("bloqueado") === "true";
-let secuenciaEnProceso = false;
 
 // ================= TIMER =================
 function actualizarTimer(){
@@ -46,12 +45,11 @@ function iniciarTemporizador(){
   },1000);
 }
 
-// ================= BLOQUEO GENERAL =================
+// ================= BLOQUEO POR TIEMPO =================
 function bloquearSistema(){
   bloqueado = true;
   localStorage.setItem("bloqueado","true");
   document.getElementById("bloqueo").style.display="flex";
-  desactivarBotones();
 }
 
 function desbloquearSistema(){
@@ -61,63 +59,21 @@ function desbloquearSistema(){
   actualizarTimer();
   temporizador = null;
   document.getElementById("bloqueo").style.display="none";
-  activarBotones();
-}
-
-// ================= BOTONES =================
-function activarBotones(){
-  secuenciaEnProceso = false;
-
-  const textos = [
-    "Secuencia 1","Secuencia 2","Secuencia 3","Secuencia 4",
-    "Secuencia 5","Secuencia 6","Secuencia 7","Secuencia 8"
-  ];
-
-  document.querySelectorAll(".botonUser").forEach((b,i)=>{
-    b.disabled = false;
-    b.innerText = textos[i];
-    b.style.background = "#1f1c2c";
-    b.style.boxShadow = "0 0 10px cyan";
-  });
-}
-
-function desactivarBotones(){
-  secuenciaEnProceso = true;
-
-  document.querySelectorAll(".botonUser").forEach(b=>{
-    b.disabled = true;
-    b.innerText = "EJECUTANDO...";
-    b.style.background = "#8b0000";
-    b.style.boxShadow = "0 0 15px red";
-  });
 }
 
 // ================= ENVÍO =================
 function enviar(ruta, valor){
-  if(bloqueado || secuenciaEnProceso) return;
+  if(bloqueado) return;
 
   if(!esAdmin && temporizador === null){
       iniciarTemporizador();
   }
 
-  desactivarBotones();
   set(ref(db,ruta),valor);
 }
 
 window.enviarGrupo1 = v => enviar("grupo1",v);
 window.enviarGrupo2 = v => enviar("grupo2",v);
-
-// ================= DESBLOQUEO CUANDO ESP TERMINA =================
-onValue(ref(db,"grupo1"), snapshot=>{
-  if(secuenciaEnProceso && snapshot.val() === 0){
-    activarBotones();
-  }
-});
-onValue(ref(db,"grupo2"), snapshot=>{
-  if(secuenciaEnProceso && snapshot.val() === 0){
-    activarBotones();
-  }
-});
 
 // ================= LOGIN =================
 window.login = function(){
@@ -126,7 +82,6 @@ window.login = function(){
       esAdmin = true;
       document.getElementById("adminPanel").style.display="block";
       document.getElementById("loginBox").style.display="none";
-      activarBotones();
       document.getElementById("password").value="";
   } else {
       alert("Contraseña incorrecta");
@@ -143,6 +98,15 @@ window.desbloqueoAdmin = function(){
       alert("Contraseña incorrecta");
       document.getElementById("adminUnlock").value="";
   }
+};
+
+// ================= ADMIN CONTROLES =================
+window.controlAdmin = function(num){
+  if(!esAdmin) return;
+  if(num==1){ enviar("grupo1",1); enviar("grupo2",5); }
+  if(num==2){ enviar("grupo1",2); enviar("grupo2",6); }
+  if(num==3){ enviar("grupo1",3); enviar("grupo2",7); }
+  if(num==4){ enviar("grupo1",4); enviar("grupo2",8); }
 };
 
 // ================= LIKES =================
@@ -170,7 +134,6 @@ window.onload = function(){
   actualizarTimer();
   if(bloqueado){
     document.getElementById("bloqueo").style.display="flex";
-    desactivarBotones();
   }
 };
 </script>
@@ -180,6 +143,7 @@ body{
   margin:0;
   font-family:Arial;
   color:white;
+
   background:
     linear-gradient(
       rgba(15,12,41,0.85),
@@ -187,6 +151,7 @@ body{
       rgba(26,0,51,0.85)
     ),
     url("./logo.png");
+
   background-size:70vh;
   background-position:center;
   background-repeat:no-repeat;
@@ -280,18 +245,18 @@ button:hover{
 
 <div class="section">
 <h2>Grupo A-D</h2>
-<button class="botonUser" onclick="enviarGrupo1(1)">Secuencia 1</button>
-<button class="botonUser" onclick="enviarGrupo1(2)">Secuencia 2</button>
-<button class="botonUser" onclick="enviarGrupo1(3)">Secuencia 3</button>
-<button class="botonUser" onclick="enviarGrupo1(4)">Secuencia 4</button>
+<button onclick="enviarGrupo1(1)">Secuencia 1</button>
+<button onclick="enviarGrupo1(2)">Secuencia 2</button>
+<button onclick="enviarGrupo1(3)">Secuencia 3</button>
+<button onclick="enviarGrupo1(4)">Secuencia 4</button>
 </div>
 
 <div class="section">
 <h2>Grupo E-H</h2>
-<button class="botonUser" onclick="enviarGrupo2(5)">Secuencia 5</button>
-<button class="botonUser" onclick="enviarGrupo2(6)">Secuencia 6</button>
-<button class="botonUser" onclick="enviarGrupo2(7)">Secuencia 7</button>
-<button class="botonUser" onclick="enviarGrupo2(8)">Secuencia 8</button>
+<button onclick="enviarGrupo2(5)">Secuencia 5</button>
+<button onclick="enviarGrupo2(6)">Secuencia 6</button>
+<button onclick="enviarGrupo2(7)">Secuencia 7</button>
+<button onclick="enviarGrupo2(8)">Secuencia 8</button>
 </div>
 
 </div>

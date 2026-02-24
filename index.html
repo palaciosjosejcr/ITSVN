@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>INSTITUTO UNIVERSITARIO VIDA NUEVA</title>
+<title>TECNOLOGICO UNIVERSITARIO VIDA NUEVA</title>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -30,7 +30,6 @@ let bloqueado = localStorage.getItem("bloqueado") === "true";
 
 
 // ================= TIMER =================
-
 function actualizarTimer(){
   document.getElementById("timer").innerText = tiempoRestante;
 }
@@ -39,7 +38,6 @@ function iniciarTemporizador(){
   temporizador = setInterval(()=>{
     tiempoRestante--;
     actualizarTimer();
-
     if(tiempoRestante <= 0){
       clearInterval(temporizador);
       bloquearSistema();
@@ -49,7 +47,6 @@ function iniciarTemporizador(){
 
 
 // ================= BLOQUEO =================
-
 function bloquearSistema(){
   bloqueado = true;
   localStorage.setItem("bloqueado","true");
@@ -68,19 +65,32 @@ function desbloquearSistema(){
 }
 
 function activarBotones(){
-  document.querySelectorAll(".botonUser").forEach(b=>b.disabled=false);
+  const textos = [
+    "Secuencia 1","Secuencia 2","Secuencia 3","Secuencia 4",
+    "Secuencia 5","Secuencia 6","Secuencia 7","Secuencia 8"
+  ];
+
+  document.querySelectorAll(".botonUser").forEach((b,index)=>{
+    b.disabled = false;
+    b.style.background = "#1f1c2c";
+    b.style.boxShadow = "0 0 10px cyan";
+    b.innerText = textos[index];
+  });
 }
 
 function desactivarBotones(){
-  document.querySelectorAll(".botonUser").forEach(b=>b.disabled=true);
+  document.querySelectorAll(".botonUser").forEach(b=>{
+    b.disabled = true;
+    b.style.background = "#8b0000";
+    b.style.boxShadow = "0 0 15px red";
+    b.innerText = "EJECUTANDO...";
+  });
 }
 
 
 // ================= LOGIN =================
-
 window.login = function(){
   const pass = document.getElementById("password").value;
-
   if(pass === ADMIN_PASSWORD){
       esAdmin = true;
       document.getElementById("adminPanel").style.display="block";
@@ -89,30 +99,25 @@ window.login = function(){
       document.getElementById("password").value="";
       return;
   }
-
   alert("Contraseña incorrecta");
   document.getElementById("password").value="";
 }
 
 
 // ================= DESBLOQUEO ADMIN =================
-
 window.desbloqueoAdmin = function(){
   const pass = document.getElementById("adminUnlock").value;
-
   if(pass === ADMIN_PASSWORD){
       desbloquearSistema();
       document.getElementById("adminUnlock").value="";
       return;
   }
-
   alert("Contraseña incorrecta");
   document.getElementById("adminUnlock").value="";
 }
 
 
-// ================= ENVÍO SECUENCIAS CON BLOQUEO =================
-
+// ================= ENVÍO SECUENCIAS =================
 function enviar(ruta, valor){
 
   if(bloqueado) return;
@@ -121,12 +126,10 @@ function enviar(ruta, valor){
       iniciarTemporizador();
   }
 
-  // 🔒 Bloquea todos los botones
   desactivarBotones();
 
   set(ref(db,ruta),valor);
 
-  // 🔓 Reactiva después de 4 segundos
   setTimeout(()=>{
       if(!bloqueado){
           activarBotones();
@@ -139,7 +142,6 @@ window.enviarGrupo2 = v => enviar("grupo2",v);
 
 
 // ================= ADMIN CONTROLES =================
-
 window.controlAdmin = function(num){
 
   if(!esAdmin) return;
@@ -159,8 +161,7 @@ window.controlAdmin = function(num){
 }
 
 
-// ================= SISTEMA DE LIKES =================
-
+// ================= LIKES =================
 const likesRef = ref(db, "likes");
 const dislikesRef = ref(db, "dislikes");
 
@@ -186,7 +187,6 @@ window.darDislike = async function(){
 
 
 // ================= INICIO =================
-
 window.onload = function(){
   actualizarTimer();
   if(bloqueado){
@@ -264,7 +264,7 @@ button:hover{
 
 <body>
 
-<header>INSTITUTO UNIVERSITARIO VIDA NUEVA</header>
+<header>TECNOLOGICO UNIVERSITARIO VIDA NUEVA</header>
 
 <div style="text-align:center" id="loginBox">
 <h3>Acceso Administrador</h3>

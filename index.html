@@ -45,6 +45,13 @@ function iniciarTemporizador(){
   },1000);
 }
 
+function detenerTemporizador(){
+  if(temporizador){
+    clearInterval(temporizador);
+    temporizador = null;
+  }
+}
+
 // ================= BLOQUEO GENERAL =================
 function bloquearSistema(){
   bloqueado = true;
@@ -80,6 +87,11 @@ window.login = function(){
   const pass = document.getElementById("password").value;
   if(pass === ADMIN_PASSWORD){
       esAdmin = true;
+
+      // 🔥 NUEVO: ocultar y detener temporizador
+      detenerTemporizador();
+      document.getElementById("timerContainer").style.display="none";
+
       document.getElementById("adminPanel").style.display="block";
       document.getElementById("loginBox").style.display="none";
       document.getElementById("password").value="";
@@ -92,6 +104,12 @@ window.login = function(){
 // ================= SALIR ADMIN =================
 window.salirAdmin = function(){
   esAdmin = false;
+
+  // 🔥 NUEVO: volver a mostrar temporizador
+  tiempoRestante = 60;
+  actualizarTimer();
+  document.getElementById("timerContainer").style.display="block";
+
   document.getElementById("adminPanel").style.display="none";
   document.getElementById("loginBox").style.display="block";
 };
@@ -254,7 +272,9 @@ button:hover{
 <button onclick="login()">Ingresar</button>
 </div>
 
+<div id="timerContainer">
 <h3 style="text-align:center">Tiempo restante: <span id="timer">60</span> segundos</h3>
+</div>
 
 <h3 style="text-align:center;">¿Te gustó el proyecto?</h3>
 <div style="text-align:center;">

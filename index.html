@@ -22,6 +22,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const ADMIN_PASSWORD = "admin123";
+const RESET_PASSWORD = "admin2";
 
 let esAdmin = false;
 let tiempoRestante = 60;
@@ -62,7 +63,6 @@ function desbloquearSistema(){
 
 // ================= ENVÍO =================
 function enviar(ruta, valor){
-
   if(bloqueado) return;
 
   if(!esAdmin && temporizador === null){
@@ -87,6 +87,13 @@ window.login = function(){
       alert("Contraseña incorrecta");
       document.getElementById("password").value="";
   }
+};
+
+// ================= SALIR ADMIN =================
+window.salirAdmin = function(){
+  esAdmin = false;
+  document.getElementById("adminPanel").style.display="none";
+  document.getElementById("loginBox").style.display="block";
 };
 
 // ================= DESBLOQUEO ADMIN =================
@@ -129,6 +136,19 @@ window.darLike = async ()=>{
 window.darDislike = async ()=>{
   const snap = await get(dislikesRef);
   await set(dislikesRef,(snap.val()||0)+1);
+};
+
+// ================= RESET LIKES =================
+window.resetReacciones = async function(){
+  const pass = prompt("Ingrese contraseña para reiniciar reacciones:");
+  
+  if(pass === RESET_PASSWORD){
+      await set(likesRef, 0);
+      await set(dislikesRef, 0);
+      alert("Reacciones reiniciadas correctamente");
+  } else {
+      alert("Contraseña incorrecta");
+  }
 };
 
 window.onload = function(){
@@ -242,6 +262,8 @@ button:hover{
 <span id="likes">0</span>
 <button onclick="darDislike()">👎 No me gusta</button>
 <span id="dislikes">0</span>
+<br><br>
+<button onclick="resetReacciones()">🔄 Reiniciar Likes</button>
 </div>
 
 <div class="container">
@@ -265,6 +287,8 @@ button:hover{
 <button onclick="controlAdmin(2)">Control Admin 2</button>
 <button onclick="controlAdmin(3)">Control Admin 3</button>
 <button onclick="controlAdmin(4)">Control Admin 4</button>
+<br><br>
+<button onclick="salirAdmin()">🔙 Volver a modo usuario</button>
 </div>
 
 </div>

@@ -181,6 +181,9 @@ let tiempoRestante = parseInt(localStorage.getItem("tiempoRestante")) || 60;
 let temporizador = null;
 let bloqueado = localStorage.getItem("bloqueado") === "true";
 
+// 🔥 NUEVO: CONTROL DE SECUENCIA
+let secuenciaActiva = false;
+
 function actualizarTimer(){
   document.getElementById("timer").innerText = tiempoRestante;
   localStorage.setItem("tiempoRestante", tiempoRestante);
@@ -211,12 +214,15 @@ function iniciarTemporizador(){
 
 function bloquearSistema(){
   bloqueado = true;
+  secuenciaActiva = false; // liberar bloqueo
   localStorage.setItem("bloqueado","true");
   document.getElementById("bloqueo").style.display="flex";
 }
 
 function desbloquearSistema(){
   bloqueado = false;
+  secuenciaActiva = false;
+
   localStorage.setItem("bloqueado","false");
   tiempoInicio = null;
   tiempoRestante = 60;
@@ -226,8 +232,20 @@ function desbloquearSistema(){
 }
 
 function enviar(ruta, valor){
+
   if(bloqueado) return;
-  if(!esAdmin && !temporizador) iniciarTemporizador();
+
+  // 🔥 evitar múltiples secuencias
+  if(secuenciaActiva && !esAdmin) return;
+
+  if(!esAdmin){
+    secuenciaActiva = true;
+  }
+
+  if(!esAdmin && !temporizador){
+    iniciarTemporizador();
+  }
+
   set(ref(db,ruta),valor);
 }
 

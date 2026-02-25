@@ -155,7 +155,6 @@ button:hover{
 <button onclick="desbloqueoAdmin()">Desbloquear</button>
 </div>
 
-<!-- FIREBASE Y LÓGICA -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -226,6 +225,23 @@ function desbloquearSistema(){
   document.getElementById("bloqueo").style.display="none";
 }
 
+function enviar(ruta, valor){
+  if(bloqueado) return;
+  if(!esAdmin && !temporizador) iniciarTemporizador();
+  set(ref(db,ruta),valor);
+}
+
+window.enviarGrupo1 = v => enviar("grupo1",v);
+window.enviarGrupo2 = v => enviar("grupo2",v);
+
+window.controlAdmin = function(num){
+  if(!esAdmin) return;
+  if(num==1){ enviar("grupo1",1); enviar("grupo2",5); }
+  if(num==2){ enviar("grupo1",2); enviar("grupo2",6); }
+  if(num==3){ enviar("grupo1",3); enviar("grupo2",7); }
+  if(num==4){ enviar("grupo1",4); enviar("grupo2",8); }
+};
+
 window.login = function(){
   const pass = document.getElementById("password").value;
   if(pass === ADMIN_PASSWORD){
@@ -245,14 +261,12 @@ window.salirAdmin = function(){
   document.getElementById("loginBox").style.display="block";
 };
 
-window.enviarGrupo1 = v => enviar("grupo1",v);
-window.enviarGrupo2 = v => enviar("grupo2",v);
-
-function enviar(ruta,valor){
-  if(bloqueado) return;
-  if(!esAdmin && !temporizador) iniciarTemporizador();
-  set(ref(db,ruta),valor);
-}
+window.desbloqueoAdmin = function(){
+  const pass = document.getElementById("adminUnlock").value;
+  if(pass === ADMIN_PASSWORD){
+      desbloquearSistema();
+  } else alert("Contraseña incorrecta");
+};
 
 const likesRef = ref(db,"likes");
 const dislikesRef = ref(db,"dislikes");
@@ -280,6 +294,7 @@ window.resetReacciones = async ()=>{
 
 window.onload = ()=>{
   actualizarTimer();
+
   if(esAdmin){
     document.getElementById("adminPanel").style.display="block";
     document.getElementById("loginBox").style.display="none";
@@ -287,6 +302,7 @@ window.onload = ()=>{
   } else {
     if(tiempoInicio && !bloqueado) iniciarTemporizador();
   }
+
   if(bloqueado) document.getElementById("bloqueo").style.display="flex";
 };
 </script>

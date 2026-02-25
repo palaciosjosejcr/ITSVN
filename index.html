@@ -64,6 +64,11 @@ button:hover{
   color:black;
 }
 
+button:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
 #adminPanel{
   display:none;
   margin-top:20px;
@@ -180,9 +185,17 @@ let tiempoInicio = parseInt(localStorage.getItem("tiempoInicio")) || null;
 let tiempoRestante = parseInt(localStorage.getItem("tiempoRestante")) || 60;
 let temporizador = null;
 let bloqueado = localStorage.getItem("bloqueado") === "true";
-
-// 🔥 NUEVO: CONTROL DE SECUENCIA
 let secuenciaActiva = false;
+
+// 🔥 BLOQUEAR / DESBLOQUEAR BOTONES
+function bloquearBotones(estado){
+  const botones = document.querySelectorAll(".left button");
+  botones.forEach(b => {
+    if(!b.innerText.includes("Control Admin")){
+      b.disabled = estado;
+    }
+  });
+}
 
 function actualizarTimer(){
   document.getElementById("timer").innerText = tiempoRestante;
@@ -214,7 +227,8 @@ function iniciarTemporizador(){
 
 function bloquearSistema(){
   bloqueado = true;
-  secuenciaActiva = false; // liberar bloqueo
+  secuenciaActiva = false;
+  bloquearBotones(false);
   localStorage.setItem("bloqueado","true");
   document.getElementById("bloqueo").style.display="flex";
 }
@@ -222,7 +236,7 @@ function bloquearSistema(){
 function desbloquearSistema(){
   bloqueado = false;
   secuenciaActiva = false;
-
+  bloquearBotones(false);
   localStorage.setItem("bloqueado","false");
   tiempoInicio = null;
   tiempoRestante = 60;
@@ -232,14 +246,13 @@ function desbloquearSistema(){
 }
 
 function enviar(ruta, valor){
-
   if(bloqueado) return;
 
-  // 🔥 evitar múltiples secuencias
   if(secuenciaActiva && !esAdmin) return;
 
   if(!esAdmin){
     secuenciaActiva = true;
+    bloquearBotones(true);
   }
 
   if(!esAdmin && !temporizador){

@@ -64,6 +64,11 @@ button:hover{
   color:black;
 }
 
+button:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
 #adminPanel{
   display:none;
   margin-top:20px;
@@ -86,6 +91,13 @@ button:hover{
   font-size:24px;
   z-index:9999;
 }
+
+#mensajeSistema{
+  text-align:center;
+  margin-top:10px;
+  color:yellow;
+  font-weight:bold;
+}
 </style>
 </head>
 
@@ -102,6 +114,8 @@ button:hover{
 <div id="timerContainer">
 <h3 style="text-align:center">Tiempo restante: <span id="timer">60</span> segundos</h3>
 </div>
+
+<div id="mensajeSistema"></div>
 
 <h3 style="text-align:center;">¿Te gustó el proyecto?</h3>
 <div style="text-align:center;">
@@ -180,9 +194,20 @@ let tiempoInicio = parseInt(localStorage.getItem("tiempoInicio")) || null;
 let tiempoRestante = parseInt(localStorage.getItem("tiempoRestante")) || 60;
 let temporizador = null;
 let bloqueado = localStorage.getItem("bloqueado") === "true";
-
-// 🔥 NUEVO: CONTROL DE SECUENCIA
 let secuenciaActiva = false;
+
+function bloquearBotones(estado){
+  const botones = document.querySelectorAll(".left button");
+  botones.forEach(b=>{
+    if(!b.innerText.includes("Control Admin")){
+      b.disabled = estado;
+    }
+  });
+}
+
+function mostrarMensaje(texto){
+  document.getElementById("mensajeSistema").innerText = texto;
+}
 
 function actualizarTimer(){
   document.getElementById("timer").innerText = tiempoRestante;
@@ -214,7 +239,9 @@ function iniciarTemporizador(){
 
 function bloquearSistema(){
   bloqueado = true;
-  secuenciaActiva = false; // liberar bloqueo
+  secuenciaActiva = false;
+  bloquearBotones(false);
+  mostrarMensaje("");
   localStorage.setItem("bloqueado","true");
   document.getElementById("bloqueo").style.display="flex";
 }
@@ -222,7 +249,8 @@ function bloquearSistema(){
 function desbloquearSistema(){
   bloqueado = false;
   secuenciaActiva = false;
-
+  bloquearBotones(false);
+  mostrarMensaje("");
   localStorage.setItem("bloqueado","false");
   tiempoInicio = null;
   tiempoRestante = 60;
@@ -232,14 +260,17 @@ function desbloquearSistema(){
 }
 
 function enviar(ruta, valor){
-
   if(bloqueado) return;
 
-  // 🔥 evitar múltiples secuencias
-  if(secuenciaActiva && !esAdmin) return;
+  if(secuenciaActiva && !esAdmin){
+    mostrarMensaje("⚠️ Operación en curso. Espere a que finalice la secuencia actual.");
+    return;
+  }
 
   if(!esAdmin){
     secuenciaActiva = true;
+    bloquearBotones(true);
+    mostrarMensaje("🔄 Secuencia en ejecución...");
   }
 
   if(!esAdmin && !temporizador){
